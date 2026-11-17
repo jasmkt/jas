@@ -24,17 +24,14 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
 
-      - name: Pasang Android SDK
-        uses: android-actions/setup-android@v3
-
-      - name: Pasang Cordova & Bina Projek Android
+      - name: Pasang Cordova dan Bina APK
         run: |
           npm install -g cordova
-          cordova platform add android@13.0.0 --no-telemetry
-          cordova build android --no-telemetry
+          cordova platform add android
+          cordova build android
 
-      - name: Muat Naik Fail APK Siap Pasang
+      - name: Muat Naik Fail APK
         uses: actions/upload-artifact@v4
         with:
-          name: ElectroScan-Pro-JAS-DIFIx-APK
+          name: ElectroScan-Pro-APK
           path: platforms/android/app/build/outputs/apk/debug/app-debug.apk
