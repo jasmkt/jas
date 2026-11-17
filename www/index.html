@@ -140,7 +140,7 @@
 
       <div>
         <label for="modelIdInput" class="block text-xs font-semibold text-slate-400 mb-1.5" data-i18n="modelIdLabel">🏷️ ID Model:</label>
-        <input type="text" id="modelIdInput" placeholder="gemini-3.1-flash" class="w-full bg-slate-950 border border-slate-700 focus:border-cyan-400 rounded-xl px-3.5 py-2.5 text-xs font-mono text-slate-200 outline-none">
+        <input type="text" id="modelIdInput" placeholder="gemini-3.8-flash" class="w-full bg-slate-950 border border-slate-700 focus:border-cyan-400 rounded-xl px-3.5 py-2.5 text-xs font-mono text-slate-200 outline-none">
       </div>
 
       <div id="customEndpointBox" class="hidden">
@@ -1058,13 +1058,12 @@ const AI_PROVIDERS = {
     protocol: "gemini",
     supportsVision: true,
     requiresKey: true,
-    defaultModel: "gemini-2.5-flash",
+    defaultModel: "gemini-3.8-flash",
     keyPlaceholder: "AQ.... atau AIzaSy...",
-    hint: "💡 Kunci API Google AI Studio (bermula dengan AQ. atau AIzaSy...) percuma sepenuhnya. Model Gemini 2.5 Flash sangat laju dan tepat.",
+    hint: "💡 Kunci API Google AI Studio (bermula dengan AQ. atau AIzaSy...) percuma sepenuhnya. Model Gemini 3.8 Flash adalah versi terkini yang paling laju dan tepat.",
     presets: [
-      { id: "gemini-2.5-flash", label: "Gemini 2.5 Flash (Percuma - Terbaik & Stabil)" },
-      { id: "gemini-2.5-flash-lite", label: "Gemini 2.5 Flash-Lite (Percuma - Sangat Ringan)" },
-      { id: "gemini-2.0-flash", label: "Gemini 2.0 Flash (Sandaran Pantas)" }
+      { id: "gemini-3.8-flash", label: "Gemini 3.8 Flash (Percuma - Terkini & Terbaik)" },
+      { id: "gemini-3.5-flash-lite", label: "Gemini 3.5 Flash-Lite (Percuma - Sangat Ringan)" }
     ],
     buildUrl: (m, k) => `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(m)}:generateContent?key=${encodeURIComponent(k || "")}`
   },
@@ -1076,12 +1075,12 @@ const AI_PROVIDERS = {
     requiresKey: true,
     defaultModel: "openrouter/free",
     keyPlaceholder: "sk-or-v1-...",
-    hint: "💡 Gunakan model berlabel (PERCUMA :free) di OpenRouter tanpa perlu kredit.",
+    hint: "💡 Gunakan model berlabel (PERCUMA :free) terkini di OpenRouter tanpa perlu kredit.",
     presets: [
-      { id: "openrouter/free", label: "OpenRouter Auto Free (PERCUMA :free - Paling Stabil)" },
-      { id: "google/gemma-3-27b-it:free", label: "Google Gemma 3 27B Vision (PERCUMA :free)" },
-      { id: "meta-llama/llama-4-scout:free", label: "Meta Llama 4 Scout (PERCUMA :free)" },
-      { id: "qwen/qwen2.5-vl-72b-instruct:free", label: "Qwen 2.5 VL 72B (PERCUMA :free)" }
+      { id: "openrouter/free", label: "OpenRouter Auto Free Router (PERCUMA :free - Paling Stabil)" },
+      { id: "inclusionai/ling-3.2-flash:free", label: "inclusionAI Ling 3.2 Flash Vision (PERCUMA :free)" },
+      { id: "perplexity/pplx-decider-flash-v1.3:free", label: "Perplexity Decider Flash V1.3 Vision (PERCUMA :free)" },
+      { id: "thinkingmachines/inkling-2-small:free", label: "Thinking Machines Inkling 2 Small Vision (PERCUMA :free)" }
     ],
     buildUrl: () => "https://openrouter.ai/api/v1/chat/completions"
   }
@@ -1113,6 +1112,7 @@ function loadSavedProviderConfig(p) {
         const deprecatedOpenRouter = [
           "google/gemini-2.0-flash-exp:free",
           "meta-llama/llama-3.2-11b-vision-instruct:free",
+          "meta-llama/llama-4-scout:free",
           "qwen/qwen2.5-vl-72b-instruct:free",
           "google/gemma-3-27b-it:free"
         ];
@@ -1120,7 +1120,7 @@ function loadSavedProviderConfig(p) {
           parsed.modelId = AI_PROVIDERS.openrouter.defaultModel;
           safeStorageSet(getProviderStorageKey(p), JSON.stringify(parsed));
         }
-        if (p === "gemini" && /^gemini-(1\.|3\.1|4-)/i.test(parsed.modelId)) {
+        if (p === "gemini" && /^gemini-(1\.|2\.|3\.1|3\.6|3\.7|4-)/i.test(parsed.modelId)) {
           parsed.modelId = AI_PROVIDERS.gemini.defaultModel;
           safeStorageSet(getProviderStorageKey(p), JSON.stringify(parsed));
         }
@@ -1323,41 +1323,16 @@ function extractJsonFromResponse(raw) {
 
 async function sendGeminiGenerateRequest(modelName, apiKey, payloadJson) {
   const cleanKey = String(apiKey || "").replace(/^["']|["']$/g, '').trim();
-  const isAqKey = cleanKey.startsWith("AQ.");
-  const attempts = isAqKey
-    ? [
-        {
-          url: `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(modelName)}:generateContent`,
-          headers: { 'Content-Type': 'application/json', 'x-goog-api-key': cleanKey }
-        },
-        {
-          url: `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(modelName)}:generateContent?key=${encodeURIComponent(cleanKey)}`,
-          headers: { 'Content-Type': 'application/json' }
-        }
-      ]
-    : [
-        {
-          url: `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(modelName)}:generateContent?key=${encodeURIComponent(cleanKey)}`,
-          headers: { 'Content-Type': 'application/json', 'x-goog-api-key': cleanKey }
-        }
-      ];
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(modelName)}:generateContent?key=${encodeURIComponent(cleanKey)}`;
 
-  let lastResp = null;
-  let lastData = {};
-  for (let i = 0; i < attempts.length; i++) {
-    const att = attempts[i];
-    const r = await fetchWithBackoff(att.url, {
-      method: 'POST',
-      headers: att.headers,
-      body: payloadJson
-    });
-    const d = await r.json().catch(() => ({}));
-    if (r.ok) return { response: r, data: d };
-    lastResp = r;
-    lastData = d;
-    if (![400, 401, 403, 404].includes(r.status)) break;
-  }
-  return { response: lastResp, data: lastData };
+  // Hantar tanpa header tambahan (x-goog-api-key) supaya Android WebView APK tidak disekat CORS
+  const r = await fetchWithBackoff(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'text/plain;charset=UTF-8' },
+    body: payloadJson
+  });
+  const d = await r.json().catch(() => ({}));
+  return { response: r, data: d };
 }
 
 async function executeSingleProviderRequest(providerKey, { promptText, base64Img = null, maxTokens = SAFE_MAX_TOKENS_SCAN }) {
@@ -1382,8 +1357,8 @@ async function executeSingleProviderRequest(providerKey, { promptText, base64Img
 
   if (cfg.protocol === 'gemini') {
     const modelsToTry = [mi];
-    if (mi !== "gemini-2.5-flash") modelsToTry.push("gemini-2.5-flash");
-    if (mi !== "gemini-2.5-flash-lite") modelsToTry.push("gemini-2.5-flash-lite");
+    if (mi !== "gemini-3.8-flash") modelsToTry.push("gemini-3.8-flash");
+    if (mi !== "gemini-3.5-flash-lite") modelsToTry.push("gemini-3.5-flash-lite");
 
     let lastErr = null;
     for (const m of modelsToTry) {
@@ -1414,9 +1389,7 @@ async function executeSingleProviderRequest(providerKey, { promptText, base64Img
 
   const u = cfg.buildUrl(mi, ak, cu);
   const headers = {
-    'Content-Type': 'application/json',
-    'HTTP-Referer': 'https://electroscan.jasdifix.app',
-    'X-Title': 'ElectroScan Pro JAS DIFIx'
+    'Content-Type': 'application/json'
   };
   if (ak) headers['Authorization'] = `Bearer ${ak}`;
 
@@ -1511,7 +1484,7 @@ async function testApiConnection() {
 }
 
 // ===================== 7. ENJIN SUARA BAHASA MELAYU TERBAIK (TTS) =====================
-const GEMINI_TTS_MODELS = ["gemini-2.5-flash-preview-tts", "gemini-2.5-flash"];
+const GEMINI_TTS_MODELS = ["gemini-3.8-flash-tts", "gemini-3.8-flash-lite-tts", "gemini-3.8-flash"];
 const TTS_ALLOWED_VOICES = ["Orus", "Charon", "Fenrir", "Puck", "Aoede", "Kore"];
 let currentTtsAudio = null;
 let isTtsSpeaking = false;
