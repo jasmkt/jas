@@ -1,0 +1,40 @@
+name: Bina APK ElectroScan Pro
+
+on:
+  push:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+jobs:
+  build-apk:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Muat turun fail repositori
+        uses: actions/checkout@v4
+
+      - name: Pasang Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Pasang Java JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Pasang Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Pasang Cordova & Bina Projek Android
+        run: |
+          npm install -g cordova
+          cordova platform add android@13.0.0 --no-telemetry
+          cordova build android --no-telemetry
+
+      - name: Muat Naik Fail APK Siap Pasang
+        uses: actions/upload-artifact@v4
+        with:
+          name: ElectroScan-Pro-JAS-DIFIx-APK
+          path: platforms/android/app/build/outputs/apk/debug/app-debug.apk
