@@ -37,6 +37,12 @@ jobs:
       - name: Patch AndroidManifest.xml (Camera, Mic, Gallery, Internet)
         run: node scripts/patch-android.js
 
+      - name: Generate App Icon
+        run: |
+          if [ -f "assets/icon-only.png" ]; then
+            npx -y @capacitor/assets generate --android --iconBackgroundColor '#020617' --splashBackgroundColor '#020617'
+          fi
+
       - name: Build Android Debug APK
         run: |
           cd android
