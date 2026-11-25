@@ -1,0 +1,8 @@
+{
+  "appId": "com.jasdifix.electroscanpro",
+  "appName": "Electro_Scan_Pro",
+  "webDir": "www",
+  "server": {
+    "androidScheme": "https"
+  }
+}
