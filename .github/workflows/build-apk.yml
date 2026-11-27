@@ -1,4 +1,4 @@
-name: Build Electro_Scan_Pro APK
+name: Build ElectroScan Pro APK (Offline PaddleOCR)
 
 on:
   push:
@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repository
+      - name: Checkout Repository
         uses: actions/checkout@v4
 
       - name: Setup Node.js 20
@@ -24,39 +24,64 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
 
-      - name: Install dependencies
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install Dependencies (Capacitor + ONNX Runtime Web)
         run: npm install
 
-      - name: Add Android platform & sync web assets
+      - name: Prepare Local ONNX Runtime Web Assets (./www/ocr/)
+        run: npm run prepare:ocr
+
+      - name: Download Offline PaddleOCR v4 Model & Dictionary into ./www/ocr/
+        run: |
+          mkdir -p www/ocr
+          echo "Downloading en_PP-OCRv4_rec_infer.onnx..."
+          curl -fSL --retry 3 \
+            "https://huggingface.co/SWHL/RapidOCR/resolve/main/PP-OCRv4/en_PP-OCRv4_rec_infer.onnx" \
+            -o www/ocr/en_PP-OCRv4_rec_infer.onnx || \
+          curl -fSL --retry 3 \
+            "https://huggingface.co/monkt/paddleocr-onnx/resolve/main/languages/english/rec.onnx" \
+            -o www/ocr/en_PP-OCRv4_rec_infer.onnx
+
+          echo "Downloading en_dict.txt..."
+          curl -fSL --retry 3 \
+            "https://raw.githubusercontent.com/PaddlePaddle/PaddleOCR/main/ppocr/utils/en_dict.txt" \
+            -o www/ocr/en_dict.txt || \
+          curl -fSL --retry 3 \
+            "https://huggingface.co/monkt/paddleocr-onnx/resolve/main/languages/english/dict.txt" \
+            -o www/ocr/en_dict.txt
+
+          ls -lh www/ocr/
+          test -s www/ocr/en_PP-OCRv4_rec_infer.onnx
+          test -s www/ocr/en_dict.txt
+
+      - name: Add Android Platform
         run: |
           if [ ! -d "android" ]; then
             npx cap add android
           fi
-          npx cap sync android
 
-      - name: Patch AndroidManifest.xml (Camera, Mic, Gallery, Internet)
-        run: node scripts/patch-android.js
+      - name: Patch Android Manifest & MainActivity
+        run: node patch-android.js
 
-      - name: Generate App Icon
+      - name: Sync Web Assets + PaddleOCR Models to Android
+        run: npx cap sync android
+
+      - name: Build Debug APK
+        working-directory: android
         run: |
-          if [ -f "assets/icon-only.png" ]; then
-            npx -y @capacitor/assets generate --android --iconBackgroundColor '#020617' --splashBackgroundColor '#020617'
-          fi
-
-      - name: Build Android Debug APK
-        run: |
-          cd android
           chmod +x gradlew
           ./gradlew assembleDebug
 
-      - name: Rename APK output
+      - name: Rename APK
         run: |
-          mkdir -p release
-          cp android/app/build/outputs/apk/debug/app-debug.apk release/Electro_Scan_Pro_v12_2.apk
+          cp android/app/build/outputs/apk/debug/app-debug.apk Electro_Scan_Pro_v13_PaddleOCR.apk
+          ls -lh Electro_Scan_Pro_v13_PaddleOCR.apk
 
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: Electro_Scan_Pro_v12_2_APK
-          path: release/Electro_Scan_Pro_v12_2.apk
+          name: Electro_Scan_Pro_v13_PaddleOCR_APK
+          path: Electro_Scan_Pro_v13_PaddleOCR.apk
           retention-days: 30
