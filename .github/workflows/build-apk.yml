@@ -13,13 +13,13 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
-      - name: Setup Node.js 20
+      - name: Setup Node.js 22
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '22'
 
       - name: Setup Java 17
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v5
         with:
           distribution: 'temurin'
           java-version: '17'
@@ -69,3 +69,16 @@ jobs:
         working-directory: android
         run: |
           chmod +x gradlew
+          ./gradlew assembleDebug
+
+      - name: Rename APK
+        run: |
+          cp android/app/build/outputs/apk/debug/app-debug.apk Electro_Scan_Pro_v13_PaddleOCR.apk
+          ls -lh Electro_Scan_Pro_v13_PaddleOCR.apk
+
+      - name: Upload APK Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Electro_Scan_Pro_v13_PaddleOCR_APK
+          path: Electro_Scan_Pro_v13_PaddleOCR.apk
+          retention-days: 30
