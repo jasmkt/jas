@@ -1975,10 +1975,10 @@ input, select, textarea { min-width: 0; max-width: 100%; }
     <!-- Zon Muat Naik & Kamera (1 Kamera Terus + 1 Galeri) -->
     <section id="dropZone" class="rounded-2xl border border-slate-800 bg-slate-950/40 p-3 transition-all relative">
       <div class="grid grid-cols-2 gap-2.5">
-        <div id="openLiveCameraBtn" class="relative overflow-hidden min-h-[54px] rounded-xl border border-dashed border-emerald-400/60 bg-emerald-500/15 hover:bg-emerald-500/25 transition-all flex items-center justify-center gap-2 px-3.5 py-3 text-emerald-300 font-bold text-xs sm:text-sm cursor-pointer select-none text-center">
+        <button type="button" id="openLiveCameraBtn" onclick="window._cameraTarget='scanner'; startLiveCamera(false);" class="relative overflow-hidden min-h-[54px] rounded-xl border border-dashed border-emerald-400/60 bg-emerald-500/15 hover:bg-emerald-500/25 transition-all flex items-center justify-center gap-2 px-3.5 py-3 text-emerald-300 font-bold text-xs sm:text-sm cursor-pointer select-none text-center">
           <span class="text-lg pointer-events-none">📷</span><span data-i18n="openCameraBtn" class="pointer-events-none">Buka Kamera</span>
-          <input type="file" id="cameraInput" accept="image/*" capture="environment" onclick="if(!isMobileCameraDevice()){ event.preventDefault(); startLiveCamera(false); }" onchange="if(this.files&&this.files[0]){handleFile(this.files[0]);this.value='';}" class="direct-file-overlay" aria-label="Buka Kamera">
-        </div>
+        </button>
+        <input type="file" id="cameraInput" accept="image/*" capture="environment" onchange="if(this.files&&this.files[0]){handleFile(this.files[0]);this.value='';}" class="hidden-file-input" aria-label="Buka Kamera">
         <div id="galleryPickerBtn" class="relative overflow-hidden min-h-[54px] rounded-xl border border-dashed border-sky-400/50 bg-sky-500/10 hover:bg-sky-500/20 transition-all flex items-center justify-center gap-2 px-3.5 py-3 text-sky-300 font-semibold text-xs sm:text-sm cursor-pointer select-none text-center">
           <span class="text-lg pointer-events-none">🖼️</span><span data-i18n="galleryBtn" class="pointer-events-none">Pilih Dari Galeri</span>
           <input type="file" id="uploadInput" accept="image/*" onchange="if(this.files&&this.files[0]){handleFile(this.files[0]);this.value='';}" class="direct-file-overlay" aria-label="Pilih Dari Galeri">
@@ -2227,17 +2227,7 @@ input, select, textarea { min-width: 0; max-width: 100%; }
       <div id="gemChatFeed" class="gem-chat-feed">
         <div id="gemChatWelcome" class="space-y-2.5 py-1">
           <div class="text-xs text-slate-300 leading-relaxed">
-            Hai juruteknik! Taip atau guna suara untuk tanya gejala kerosakan, susunan kaki, pengganti komponen, atau sambung soalan daripada hasil imbasan di atas.
-          </div>
-          <div class="grid grid-cols-4 gap-1">
-            <button type="button" onclick="sendGeminiChatQuick('Senaraikan siri IC popular untuk SMPS, audio op-amp, power amp dan regulator beserta pinout serta gantian setara.')" class="gem-chip-prompt"><span class="chip-ico">🧠</span><span>IC Series</span></button>
-            <button type="button" onclick="sendGeminiChatQuick('Senaraikan siri Transistor BJT NPN/PNP popular (C1815, A1015, 2SC5200, 2SA1943, TIP41/42, BD139/140, S8050/S8550) beserta susunan kaki dan pengganti.')" class="gem-chip-prompt"><span class="chip-ico">🔌</span><span>Transistor</span></button>
-            <button type="button" onclick="sendGeminiChatQuick('Senaraikan siri MOSFET N-Channel & P-Channel popular (IRFZ44N, IRF3205, IRF540N, IRF9540, 2N7002, AO3400, 7N65, 10N60) beserta pinout dan gantian.')" class="gem-chip-prompt"><span class="chip-ico">⚡</span><span>MOSFET</span></button>
-            <button type="button" onclick="sendGeminiChatQuick('Terangkan siri dan kod Kapasitor (elektrolitik, seramik 104/103/105, tantalum, filem MKP/MKT) serta cara baca nilai, voltan dan penggantian selamat.')" class="gem-chip-prompt"><span class="chip-ico">🔋</span><span>Kapasitor</span></button>
-            <button type="button" onclick="sendGeminiChatQuick('Senaraikan siri Diod popular (1N4007, 1N5408, 1N4148, Schottky SS34/SR560, Ultrafast UF4007/MUR1560, Zener BZX84/1N47xx) dan gantiannya.')" class="gem-chip-prompt"><span class="chip-ico">🔺</span><span>Diod &amp; Zener</span></button>
-            <button type="button" onclick="sendGeminiChatQuick('Senaraikan siri Pengatur Voltan (7805, 7812, 7815, 7912, 7915, AMS1117-3.3/5.0, LM317, TL431) beserta susunan kaki dan pengganti.')" class="gem-chip-prompt"><span class="chip-ico">🎛️</span><span>Regulator</span></button>
-            <button type="button" onclick="sendGeminiChatQuick('Senaraikan siri IGBT & Triac popular (FGA25N120, H20R1203, RJH60F5, BT136, BT137, BTA16) untuk inverter, induction cooker dan kawalan AC.')" class="gem-chip-prompt"><span class="chip-ico">🔥</span><span>IGBT &amp; Triac</span></button>
-            <button type="button" onclick="sendGeminiChatQuick('Terangkan siri dan kod Perintang (SMD 3-digit, 4-digit, kod R, EIA-96, dan gelang warna 4/5 jalur) serta kadaran kuasa watt.')" class="gem-chip-prompt"><span class="chip-ico">📏</span><span>Perintang</span></button>
+            Hai juruteknik, taip atau guna suara untuk bantuan.
           </div>
         </div>
       </div>
@@ -2268,8 +2258,8 @@ input, select, textarea { min-width: 0; max-width: 100%; }
           </div>
         </div>
         <div id="gemChatCamMenu" class="hidden mb-2 rounded-xl bg-slate-900/95 border border-emerald-400/40 p-2 flex items-center gap-2">
-          <label for="gemChatNativePhotoInput" role="button" tabindex="0" onclick="closeGemChatCamMenu()" class="flex-1 py-2 px-3 rounded-lg bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-400/40 text-emerald-200 font-bold text-xs text-center cursor-pointer">📸 Tangkap Gambar</label>
-          <label for="gemChatNativeVideoInput" role="button" tabindex="0" onclick="closeGemChatCamMenu()" class="flex-1 py-2 px-3 rounded-lg bg-rose-500/15 hover:bg-rose-500/25 border border-rose-400/40 text-rose-200 font-bold text-xs text-center cursor-pointer">🎬 Rakam Video</label>
+          <button type="button" onclick="closeGemChatCamMenu(); window._cameraTarget='gemChat'; startLiveCamera(false);" class="flex-1 py-2 px-3 rounded-lg bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-400/40 text-emerald-200 font-bold text-xs text-center cursor-pointer">📸 Tangkap Gambar</button>
+          <button type="button" onclick="closeGemChatCamMenu(); window._videoRecTarget='gemChat'; startVideoRecorderPreview();" class="flex-1 py-2 px-3 rounded-lg bg-rose-500/15 hover:bg-rose-500/25 border border-rose-400/40 text-rose-200 font-bold text-xs text-center cursor-pointer">🎬 Rakam Video</button>
           <button type="button" onclick="closeGemChatCamMenu()" class="px-2.5 py-2 rounded-lg bg-slate-800 text-slate-400 text-xs font-bold cursor-pointer">✕</button>
         </div>
         <div class="gem-pill-bar" style="flex-direction:column;align-items:stretch;gap:0.45rem;border-radius:1.15rem;padding:0.45rem 0.55rem;">
@@ -8952,10 +8942,10 @@ function tryDecodeThermalAndProtection(rawCode) {
   ];
 
   // Fius termal gulungan motor atau peralatan: contoh "115C", "130C2A", "TF135", "RH130", "BF125", "RY185"
-  const tfMatch = c.match(/^(?:TF|RH|BF|RY|X31|SET)?(9\d|1\d\d|2[0-5]\d)C?(?:(\d+)A)?(?:250V)?$/);
+  const tfMatch = c.match(/^(?:(?:TF|RH|BF|RY|X31|SET)(9\d|1\d\d|2[0-5]\d)C?|(9\d|1\d\d|2[0-5]\d)C)(?:(\d+)A)?(?:250V)?$/);
   if (tfMatch) {
-    const temp = parseInt(tfMatch[1], 10);
-    const amp = tfMatch[2] ? parseInt(tfMatch[2], 10) : (temp <= 150 ? 2 : 10);
+    const temp = parseInt(tfMatch[1] || tfMatch[2], 10);
+    const amp = tfMatch[3] ? parseInt(tfMatch[3], 10) : (temp <= 150 ? 2 : 10);
     const isMotorWinding = temp <= 150 && amp <= 5;
     return {
       kategori_komponen: isMotorWinding ? "Fius Termal Gulungan Motor Kipas / Motor Elektrik" : "Fius Termal Peralatan Pemanas (TCO)",
@@ -10434,6 +10424,17 @@ function captureLivePhoto() {
   }
   ctx.drawImage(video, sx, sy, sw, sh, 0, 0, w, h);
   try { ctx.filter = 'none'; } catch (e) {}
+  if (window._cameraTarget === 'gemChat') {
+    window._cameraTarget = 'scanner';
+    sourceCanvas.toBlob(function (blob) {
+      stopLiveCamera();
+      if (blob) {
+        const file = new File([blob], `kamera_bengkel_${Date.now()}.jpg`, { type: 'image/jpeg' });
+        handleGemChatMediaSelect({ target: { files: [file], value: '' } });
+      }
+    }, 'image/jpeg', 0.9);
+    return;
+  }
   saveSnapToPhoneGallery(sourceCanvas);
   stashSnapThumb(sourceCanvas);
   stopLiveCamera();
@@ -13061,9 +13062,11 @@ function quickDecodeOnly(fromHistory = false) {
       return;
     }
 
-    // Sandaran perintang SMD / kapasitor jika belum ditangkap
+    // Sandaran perintang SMD / kapasitor jika belum ditangkap (tolak nilai mustahil > 100MΩ)
     const resistorData = tryDecodeResistor(code);
-    if (resistorData) {
+    let _resBad = false;
+    try { const _rd2 = decodeSmdResistorCode(code, "auto"); _resBad = !!(_rd2 && _rd2.ohms > 1e8); } catch (e) {}
+    if (resistorData && !_resBad) {
       if (!fromHistory && !consumeOneTrialUse()) return;
       renderResult(resistorData, elapsedLabel());
       saveToHistory(resistorData, code);
@@ -14176,9 +14179,15 @@ function startInAppVideoRecording() {
     const ext = finalMime.includes("mp4") ? "mp4" : "webm";
     const blob = new Blob(videoRecChunks, { type: finalMime });
     const file = new File([blob], `rakaman_diagnostik_${Date.now()}.${ext}`, { type: finalMime });
+    const _vTarget = window._videoRecTarget || 'scanner';
+    window._videoRecTarget = 'scanner';
     closeInAppVideoRecorder();
     if (file.size > 1000) {
-      handleVideoFileObject(file);
+      if (_vTarget === 'gemChat' && typeof handleGemChatMediaSelect === 'function') {
+        handleGemChatMediaSelect({ target: { files: [file], value: '' } });
+      } else {
+        handleVideoFileObject(file);
+      }
     } else {
       showToast("⚠️ Rakaman terlalu pendek / kosong.", "warn");
     }
