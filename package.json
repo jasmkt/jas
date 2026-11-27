@@ -1,0 +1,19 @@
+{
+  "name": "electro-scan-pro",
+  "version": "13.0.0",
+  "description": "Electro_Scan_Pro v13.0 Pro by JAS DIFIX with Offline PaddleOCR (ONNX)",
+  "private": true,
+  "scripts": {
+    "prepare:ocr": "node -e \"const fs=require('fs'),p=require('path');fs.mkdirSync('www/ocr',{recursive:true});const d='node_modules/onnxruntime-web/dist';for(const f of fs.readdirSync(d)){if(/^ort(\\.min\\.js|-wasm.*\\.(wasm|mjs))$/.test(f))fs.copyFileSync(p.join(d,f),p.join('www/ocr',f));}console.log('Copied ORT assets to www/ocr');\"",
+    "cap:sync": "npx cap sync android",
+    "patch:android": "node patch-android.js"
+  },
+  "dependencies": {
+    "@capacitor/android": "^6.1.2",
+    "@capacitor/core": "^6.1.2",
+    "onnxruntime-web": "1.19.2"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "^6.1.2"
+  }
+}
