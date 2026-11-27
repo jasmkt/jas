@@ -1522,6 +1522,8 @@ input, select, textarea { min-width: 0; max-width: 100%; }
   #quickDecodeBtn, #checkCodeBtn { white-space: normal !important; overflow: visible !important; text-overflow: clip !important; font-size: 0.8rem; line-height: 1.15; padding-left: 0.5rem; padding-right: 0.5rem; }
 }
 </style>
+<link rel="icon" type="image/png" href="./icon.png">
+<link rel="apple-touch-icon" href="./icon.png">
 </head>
 <body class="bg-slate-950 text-slate-100 min-h-screen antialiased selection:bg-cyan-400 selection:text-slate-950 overflow-x-hidden">
 
@@ -2966,7 +2968,7 @@ function syncAppSettingsForm() {
 // Kunci API terbina dalam (APK / edisi bengkel) — HANYA 2 kunci yang dibenarkan pengguna
 const BUNDLED_API_KEYS = {
   gemini: "AQ.Ab8RN6JWxk3M0DvlbK5F2GzCVm9xxNeHlVvyP2rBIcHvAy-5aA",
-  openrouter: "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"
+  openrouter: ""
 };
 
 function seedBundledApiKeysIfNeeded() {
@@ -2975,7 +2977,8 @@ function seedBundledApiKeysIfNeeded() {
     try {
       const oldKeys = [
         { sk: "jas_ai_provider_cfg_gemini", bad: "AQ.Ab8RN6JUfBj-GrN8M7kjXwgSg-4S6DPpaXki1__AwO7aBDe4WQ" },
-        { sk: "jas_ai_provider_cfg_openrouter", bad: "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" }
+        { sk: "jas_ai_provider_cfg_openrouter", bad: "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" },
+        { sk: "jas_ai_provider_cfg_openrouter", bad: "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" }
       ];
       oldKeys.forEach(function (item) {
         const raw = safeStorageGet(item.sk);
@@ -4942,14 +4945,14 @@ const AI_PROVIDERS = {
     protocol: "gemini",
     supportsVision: true,
     requiresKey: true,
-    defaultModel: "gemini-3.8-flash",
+    defaultModel: "gemini-2.5-flash",
     keyPlaceholder: "AIzaSy... / AQ.... (Boleh letak >1 kunci pisah koma)",
-    hint: "💡 Enjin Google AI terkini (Gemini 3.8 Flash, Gemini 4 Hydrogen, Gemini 3.5 Flash) dengan Carian Google Langsung & auto-tukar model jika pelayan sesak.",
+    hint: "💡 Enjin Google AI Studio (Gemini 2.5 Flash, 2.5 Flash-Lite, 2.5 Pro) dengan auto-tukar model jika pelayan sesak.",
     presets: [
-      { id: "gemini-3.8-flash", label: "⚡ Gemini 3.8 Flash (Utama — Pantas, Stabil & Carian Google) ★" },
-      { id: "gemini-4-hydrogen", label: "🧠 Gemini 4 Hydrogen (Penaakulan Tinggi)" },
-      { id: "gemini-3.5-flash", label: "🔬 Gemini 3.5 Flash (Sandaran Stabil)" },
-      { id: "gemini-3.5-flash-lite", label: "💨 Gemini 3.5 Flash-Lite (Ultra Pantas)" }
+      { id: "gemini-2.5-flash", label: "⚡ Gemini 2.5 Flash (Utama AI Studio — Pantas & Stabil) ★" },
+      { id: "gemini-2.5-flash-lite", label: "💨 Gemini 2.5 Flash-Lite (Ultra Pantas & Jimat Kuota)" },
+      { id: "gemini-2.5-pro", label: "🧠 Gemini 2.5 Pro (Penaakulan Tinggi)" },
+      { id: "gemini-3.8-flash", label: "🔬 Gemini 3.8 Flash (Alternatif)" }
     ],
     buildUrl: (m, k) => `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(String(m || "").replace(/^models\//i, ""))}:generateContent?key=${encodeURIComponent(k || "")}`
   },
@@ -5086,11 +5089,10 @@ function sanitizeGeminiModelId(rawModelId) {
   let m = String(rawModelId || "").trim().replace(/^models\//i, "");
   if (
     !m ||
-    /^gemini-(1\.|2\.|3\.6|3\.7)/i.test(m) ||
-    m === "gemini-3.8-pro" ||
+    /^gemini-(1\.|2\.0)/i.test(m) ||
     m === "gemini-pro"
   ) {
-    return "gemini-3.8-flash";
+    return "gemini-2.5-flash";
   }
   return m;
 }
@@ -5527,10 +5529,10 @@ async function executeSingleProviderRequest(providerKey, { promptText, base64Img
     const activeKeyPool = keyPool.length > 0 ? keyPool : [ak];
     const modelsQueue = [
       mi,
-      "gemini-3.8-flash",
-      "gemini-3.5-flash",
-      "gemini-3.5-flash-lite",
-      "gemini-4-hydrogen"
+      "gemini-2.5-flash",
+      "gemini-2.5-flash-lite",
+      "gemini-2.5-pro",
+      "gemini-3.8-flash"
     ].filter((x, i, a) => x && a.indexOf(x) === i);
 
     const triedModels = new Set();
@@ -5812,10 +5814,10 @@ async function testApiConnection() {
       const keyList = keys.length ? keys : [ak];
       const testModels = [
         mi,
-        "gemini-3.8-flash",
-        "gemini-4-hydrogen",
-        "gemini-3.5-flash",
-        "gemini-3.5-flash-lite"
+        "gemini-2.5-flash",
+        "gemini-2.5-flash-lite",
+        "gemini-2.5-pro",
+        "gemini-3.8-flash"
       ].filter((x, i, a) => x && a.indexOf(x) === i);
       let okLabel = "";
       let workingModel = "";
@@ -12777,22 +12779,26 @@ async function callWorkshopAiForComponent({ promptText, base64Img = null, maxTok
       }
     } catch (gemErr) {
       if (_abortCurrentAction || (gemErr && (gemErr.name === 'AbortError' || gemErr.message === 'ABORTED'))) throw gemErr;
-      if (hasOr && typeof window.streamOpenRouterChatFallback === "function") {
-        const msgs = [
-          { role: "system", content: sysInst },
-          {
-            role: "user",
-            content: base64Img
-              ? [
-                  { type: "text", text: promptText },
-                  { type: "image_url", image_url: { url: `data:image/jpeg;base64,${base64Img}` } }
-                ]
-              : promptText
+      if (hasOr && getMultiAiFailoverEnabled() && typeof window.streamOpenRouterChatFallback === "function") {
+        try {
+          const msgs = [
+            { role: "system", content: sysInst },
+            {
+              role: "user",
+              content: base64Img
+                ? [
+                    { type: "text", text: promptText },
+                    { type: "image_url", image_url: { url: `data:image/jpeg;base64,${base64Img}` } }
+                  ]
+                : promptText
+            }
+          ];
+          const orOut = await window.streamOpenRouterChatFallback(msgs, orKey, signal, null);
+          if (orOut && orOut.trim()) {
+            return { text: orOut.trim(), label: "Pembantu Bengkel AI (OpenRouter)" };
           }
-        ];
-        const orOut = await window.streamOpenRouterChatFallback(msgs, orKey, signal, null);
-        if (orOut && orOut.trim()) {
-          return { text: orOut.trim(), label: "Pembantu Bengkel AI (OpenRouter)" };
+        } catch (orErr) {
+          console.warn("OpenRouter fallback gagal:", orErr);
         }
       }
       throw gemErr;
@@ -17193,14 +17199,14 @@ window.streamGeminiChatSSE = async function (contents, systemPrompt, apiKey, sig
 
   const fullQueue = Array.from(new Set([
     prefModel,
+    "gemini-2.5-flash",
+    "gemini-2.5-flash-lite",
+    "gemini-2.5-pro",
     "gemini-3.8-flash",
-    "gemini-3.5-flash",
-    "gemini-3.5-flash-lite",
-    "gemini-4-hydrogen",
     ...baseQueue
   ].filter(Boolean)));
 
-  const activeQueue = fullQueue.filter(m => !isModelInCooldown("gemini", m) && !/^gemini-(3\.6|3\.7|2\.|1\.)/i.test(m));
+  const activeQueue = fullQueue.filter(m => !isModelInCooldown("gemini", m) && !/^gemini-(1\.|2\.0)/i.test(m));
   const modelsToRun = (activeQueue.length ? activeQueue : fullQueue).slice(0, 6);
 
   const keyPool = String(apiKey || "").split(/[\s,;]+/).map(k => k.trim()).filter(Boolean);
