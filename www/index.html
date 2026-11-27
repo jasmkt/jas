@@ -20,11 +20,21 @@
     overscroll-behavior: none;
     -webkit-font-smoothing: antialiased;
   }
-  button, label, input, select, a, #secretLightningTrigger {
+  button, label, select, a, #secretLightningTrigger {
     touch-action: manipulation;
     -webkit-tap-highlight-color: transparent;
     user-select: none;
     -webkit-user-select: none;
+    font-family: inherit;
+  }
+  input, textarea {
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+    user-select: text !important;
+    -webkit-user-select: text !important;
+    direction: ltr !important;
+    unicode-bidi: plaintext;
+    text-align: left;
     font-family: inherit;
   }
   button, select { background-color: transparent; color: inherit; }
@@ -2152,7 +2162,7 @@ input, select, textarea { min-width: 0; max-width: 100%; }
     <section class="mt-5 pt-5 border-t border-slate-800">
       <label for="manualCode" class="block text-xs font-medium text-slate-400 mb-2" data-i18n="manualSearchLabel">⌨️ Carian Kod Manual:</label>
       <div class="flex flex-col sm:flex-row gap-2.5">
-        <input type="text" id="manualCode" placeholder="IC, Transistor, MOSFET, Diod, Resistor..." onkeydown="if(event.key==='Enter') searchByCode()" class="flex-1 bg-slate-950/80 border border-slate-700 focus:border-cyan-400 rounded-xl px-4 py-3 text-sm text-white placeholder-slate-500 outline-none">
+        <input type="text" id="manualCode" dir="ltr" autocomplete="off" autocorrect="off" autocapitalize="characters" spellcheck="false" placeholder="IC, Transistor, MOSFET, Diod, Resistor..." onkeydown="if(event.key==='Enter') searchByCode()" class="flex-1 bg-slate-950/80 border border-slate-700 focus:border-cyan-400 rounded-xl px-4 py-3 text-sm text-white placeholder-slate-500 outline-none">
         <div id="searchActionRow" class="grid grid-cols-2 gap-2 w-full sm:w-auto" style="display:grid;grid-template-columns:1fr 1fr;">
           <div class="flex gap-1.5 min-w-0">
             <button type="button" id="quickDecodeBtn" onclick="quickDecodeOnly()" data-i18n="quickDecodeBtn" class="flex-1 min-w-0 px-3 py-3 rounded-xl bg-slate-800 border border-slate-700 text-cyan-300 font-bold text-xs sm:text-sm cursor-pointer text-center leading-snug">⚡ Carian Offline</button>
