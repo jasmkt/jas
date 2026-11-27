@@ -24,9 +24,6 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
 
-      - name: Setup Android SDK
-        uses: android-actions/setup-android@v3
-
       - name: Install Dependencies (Capacitor + ONNX Runtime Web)
         run: npm install
 
@@ -72,16 +69,3 @@ jobs:
         working-directory: android
         run: |
           chmod +x gradlew
-          ./gradlew assembleDebug
-
-      - name: Rename APK
-        run: |
-          cp android/app/build/outputs/apk/debug/app-debug.apk Electro_Scan_Pro_v13_PaddleOCR.apk
-          ls -lh Electro_Scan_Pro_v13_PaddleOCR.apk
-
-      - name: Upload APK Artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: Electro_Scan_Pro_v13_PaddleOCR_APK
-          path: Electro_Scan_Pro_v13_PaddleOCR.apk
-          retention-days: 30
