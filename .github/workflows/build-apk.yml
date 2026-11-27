@@ -62,7 +62,7 @@ jobs:
             npx cap add android
           fi
 
-      - name: Patch Android Manifest & MainActivity
+      - name: Patch Android Manifest, MainActivity & App Logo
         run: node patch-android.js
 
       - name: Sync Web Assets + PaddleOCR Models to Android
