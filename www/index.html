@@ -4945,14 +4945,14 @@ const AI_PROVIDERS = {
     protocol: "gemini",
     supportsVision: true,
     requiresKey: true,
-    defaultModel: "gemini-2.5-flash",
+    defaultModel: "gemini-3.8-flash",
     keyPlaceholder: "AIzaSy... / AQ.... (Boleh letak >1 kunci pisah koma)",
-    hint: "💡 Enjin Google AI Studio (Gemini 2.5 Flash, 2.5 Flash-Lite, 2.5 Pro) dengan auto-tukar model jika pelayan sesak.",
+    hint: "💡 Enjin Google AI terkini (Gemini 3.8 Flash, Gemini 4 Hydrogen, Gemini 3.5 Flash) dengan Carian Google Langsung & auto-tukar model jika pelayan sesak.",
     presets: [
-      { id: "gemini-2.5-flash", label: "⚡ Gemini 2.5 Flash (Utama AI Studio — Pantas & Stabil) ★" },
-      { id: "gemini-2.5-flash-lite", label: "💨 Gemini 2.5 Flash-Lite (Ultra Pantas & Jimat Kuota)" },
-      { id: "gemini-2.5-pro", label: "🧠 Gemini 2.5 Pro (Penaakulan Tinggi)" },
-      { id: "gemini-3.8-flash", label: "🔬 Gemini 3.8 Flash (Alternatif)" }
+      { id: "gemini-3.8-flash", label: "⚡ Gemini 3.8 Flash (Utama — Pantas, Stabil & Carian Google) ★" },
+      { id: "gemini-4-hydrogen", label: "🧠 Gemini 4 Hydrogen (Penaakulan Tinggi)" },
+      { id: "gemini-3.5-flash", label: "🔬 Gemini 3.5 Flash (Sandaran Stabil)" },
+      { id: "gemini-3.5-flash-lite", label: "💨 Gemini 3.5 Flash-Lite (Ultra Pantas)" }
     ],
     buildUrl: (m, k) => `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(String(m || "").replace(/^models\//i, ""))}:generateContent?key=${encodeURIComponent(k || "")}`
   },
@@ -5089,10 +5089,11 @@ function sanitizeGeminiModelId(rawModelId) {
   let m = String(rawModelId || "").trim().replace(/^models\//i, "");
   if (
     !m ||
-    /^gemini-(1\.|2\.0)/i.test(m) ||
+    /^gemini-(1\.|2\.|3\.6|3\.7)/i.test(m) ||
+    m === "gemini-3.8-pro" ||
     m === "gemini-pro"
   ) {
-    return "gemini-2.5-flash";
+    return "gemini-3.8-flash";
   }
   return m;
 }
@@ -5529,10 +5530,10 @@ async function executeSingleProviderRequest(providerKey, { promptText, base64Img
     const activeKeyPool = keyPool.length > 0 ? keyPool : [ak];
     const modelsQueue = [
       mi,
-      "gemini-2.5-flash",
-      "gemini-2.5-flash-lite",
-      "gemini-2.5-pro",
-      "gemini-3.8-flash"
+      "gemini-3.8-flash",
+      "gemini-4-hydrogen",
+      "gemini-3.5-flash",
+      "gemini-3.5-flash-lite"
     ].filter((x, i, a) => x && a.indexOf(x) === i);
 
     const triedModels = new Set();
@@ -5814,10 +5815,10 @@ async function testApiConnection() {
       const keyList = keys.length ? keys : [ak];
       const testModels = [
         mi,
-        "gemini-2.5-flash",
-        "gemini-2.5-flash-lite",
-        "gemini-2.5-pro",
-        "gemini-3.8-flash"
+        "gemini-3.8-flash",
+        "gemini-4-hydrogen",
+        "gemini-3.5-flash",
+        "gemini-3.5-flash-lite"
       ].filter((x, i, a) => x && a.indexOf(x) === i);
       let okLabel = "";
       let workingModel = "";
@@ -12731,6 +12732,18 @@ const ms = Math.max(0.1, performance.now() - t0).toFixed(0);
 
 async function callWorkshopAiForComponent({ promptText, base64Img = null, maxTokens = SAFE_MAX_TOKENS_SCAN }) {
   if (_abortCurrentAction) throw new DOMException('ABORTED', 'AbortError');
+  // Utamakan callUnifiedAiApi (mod JSON rasmi generateContent) supaya carian kod manual & imbasan komponen 100% stabil tanpa terganggu format SSE
+  try {
+    const unifiedRes = await callUnifiedAiApi({ promptText, base64Img, maxTokens });
+    if (unifiedRes && unifiedRes.text && unifiedRes.text.trim()) {
+      return unifiedRes;
+    }
+  } catch (uErr) {
+    if (_abortCurrentAction || (uErr && (uErr.name === 'AbortError' || uErr.message === 'ABORTED'))) throw uErr;
+    // Jika gagal, teruskan ke laluan sandaran SSE di bawah
+    var _unifiedErr = uErr;
+  }
+
   const signal = _aiAbortController ? _aiAbortController.signal : undefined;
   const geminiKey = typeof getGeminiKeyForTts === "function" ? getGeminiKeyForTts() : "";
   const orKey = typeof effectiveApiKey === "function"
@@ -12963,19 +12976,9 @@ IMPORTANT: In "senarai_pin", list ALL pins/terminals of the component (not just 
     }
   } catch (err) {
     if (_abortCurrentAction || (err && (err.name === 'AbortError' || err.message === 'ABORTED'))) return;
-    // Sandaran automatik ke carian offline jika AI gagal parse / rangkaian (hanya jika bukan daripada auto-fallback carian manual yang memang tiada dalam DB)
-    const isJsonOrParseErr = /JSON|parse|sah|valid/i.test(String(err && err.message || ""));
-    if (!overrideCode && (isJsonOrParseErr || /network|fetch|timeout|HTTP|quota|429|503/i.test(String(err && err.message || "")))) {
-      showToast("⚠️ AI dalam talian gagal — menukar ke Carian Offline automatik...", "warn");
-      try {
-        setScanButtonsBusy(false);
-        const stopOnlineBtn2 = document.getElementById('stopOnlineSearchBtn');
-        if (stopOnlineBtn2) stopOnlineBtn2.classList.add('hidden');
-        return quickDecodeOnly();
-      } catch (e2) {}
-    }
-    ra.innerHTML = buildApiErrorDiagnostics(err.message);
-    showToast("❌ " + err.message, "err");
+    // Jangan lompat ke Carian Offline apabila pengguna tekan Carian Dalam Talian — paparkan ralat online sebenar
+    ra.innerHTML = buildApiErrorDiagnostics(err.message || "Sambungan Carian Dalam Talian gagal");
+    showToast("❌ Carian Online: " + (err.message || "Gagal"), "err");
     if (ra.scrollIntoView) {
       try { ra.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); } catch (e) {}
     }
@@ -17199,14 +17202,14 @@ window.streamGeminiChatSSE = async function (contents, systemPrompt, apiKey, sig
 
   const fullQueue = Array.from(new Set([
     prefModel,
-    "gemini-2.5-flash",
-    "gemini-2.5-flash-lite",
-    "gemini-2.5-pro",
     "gemini-3.8-flash",
+    "gemini-4-hydrogen",
+    "gemini-3.5-flash",
+    "gemini-3.5-flash-lite",
     ...baseQueue
   ].filter(Boolean)));
 
-  const activeQueue = fullQueue.filter(m => !isModelInCooldown("gemini", m) && !/^gemini-(1\.|2\.0)/i.test(m));
+  const activeQueue = fullQueue.filter(m => !isModelInCooldown("gemini", m) && !/^gemini-(3\.6|3\.7|2\.|1\.)/i.test(m));
   const modelsToRun = (activeQueue.length ? activeQueue : fullQueue).slice(0, 6);
 
   const keyPool = String(apiKey || "").split(/[\s,;]+/).map(k => k.trim()).filter(Boolean);
