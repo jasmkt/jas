@@ -7,7 +7,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<title>Electro_Scan_Pro — Jas Difix v12.2 (Google AI Terkini + Galeri Terus + Anti-Sesak)</title>
+<title>Electro_Scan_Pro — Jas Difix v13.0 Pro (Google AI Terkini + Galeri Terus + Anti-Sesak)</title>
 <style id="offlineTailwindCore">
   *, ::before, ::after { box-sizing: border-box; border-width: 0; border-style: solid; border-color: #334155; }
   html, body {
@@ -30,6 +30,10 @@
   button, select { background-color: transparent; color: inherit; }
   table { border-collapse: collapse; width: 100%; }
   summary::-webkit-details-marker { display: none; }
+    .direct-file-overlay {
+    position: absolute; inset: 0; width: 100%; height: 100%;
+    opacity: 0; cursor: pointer; z-index: 5; font-size: 0;
+  }
   .hidden-file-input {
     position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
     overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; opacity: 0;
@@ -1800,9 +1804,37 @@ input, select, textarea { min-width: 0; max-width: 100%; }
     <div class="set-group">
       <div class="set-head" data-i18n="aiGroupKey">Kunci</div>
       <div class="set-pad space-y-2">
-        <div id="keyStatusLine" class="text-[11px] font-semibold text-emerald-300">Ada kunci — disembunyikan</div>
-        <div class="flex gap-2">
-          <input type="password" id="apiKeyInput" autocomplete="off" placeholder="Kunci dipasang. Tampal sahaja jika mahu ganti." class="flex-1 bg-slate-950 border border-slate-700 rounded-lg px-2.5 py-2 text-xs font-mono text-slate-200 outline-none" oninput="syncKeyRevealButton()">
+        <div id="keyStatusLine" class="text-[11px] font-semibold text-slate-400">Tiada kunci</div>
+        <div id="geminiMultiKeyBox" class="space-y-1.5">
+          <div class="text-[10px] text-cyan-300/90">Masukkan 1 hingga 5 kunci Gemini (AIzaSy...). Sistem akan bertukar automatik jika satu kunci habis kuota.</div>
+          <div class="flex items-center gap-1.5">
+            <span class="text-[10px] font-bold text-slate-300 w-16 shrink-0">Kunci 1</span>
+            <input type="password" id="geminiKey1" autocomplete="off" placeholder="Gemini Kunci 1 (AIzaSy...)" class="flex-1 bg-slate-950 border border-slate-700 rounded-lg px-2.5 py-2 text-xs font-mono text-slate-200 outline-none">
+            <button type="button" id="toggleGemKeyBtn1" onclick="toggleGeminiSlotVisibility(1)" class="px-2.5 py-2 rounded-lg bg-slate-800 border border-slate-700 text-cyan-300 text-[11px] font-semibold cursor-pointer">Lihat</button>
+          </div>
+          <div class="flex items-center gap-1.5">
+            <span class="text-[10px] font-bold text-slate-300 w-16 shrink-0">Kunci 2</span>
+            <input type="password" id="geminiKey2" autocomplete="off" placeholder="Gemini Kunci 2 (pilihan)" class="flex-1 bg-slate-950 border border-slate-700 rounded-lg px-2.5 py-2 text-xs font-mono text-slate-200 outline-none">
+            <button type="button" id="toggleGemKeyBtn2" onclick="toggleGeminiSlotVisibility(2)" class="px-2.5 py-2 rounded-lg bg-slate-800 border border-slate-700 text-cyan-300 text-[11px] font-semibold cursor-pointer">Lihat</button>
+          </div>
+          <div class="flex items-center gap-1.5">
+            <span class="text-[10px] font-bold text-slate-300 w-16 shrink-0">Kunci 3</span>
+            <input type="password" id="geminiKey3" autocomplete="off" placeholder="Gemini Kunci 3 (pilihan)" class="flex-1 bg-slate-950 border border-slate-700 rounded-lg px-2.5 py-2 text-xs font-mono text-slate-200 outline-none">
+            <button type="button" id="toggleGemKeyBtn3" onclick="toggleGeminiSlotVisibility(3)" class="px-2.5 py-2 rounded-lg bg-slate-800 border border-slate-700 text-cyan-300 text-[11px] font-semibold cursor-pointer">Lihat</button>
+          </div>
+          <div class="flex items-center gap-1.5">
+            <span class="text-[10px] font-bold text-slate-300 w-16 shrink-0">Kunci 4</span>
+            <input type="password" id="geminiKey4" autocomplete="off" placeholder="Gemini Kunci 4 (pilihan)" class="flex-1 bg-slate-950 border border-slate-700 rounded-lg px-2.5 py-2 text-xs font-mono text-slate-200 outline-none">
+            <button type="button" id="toggleGemKeyBtn4" onclick="toggleGeminiSlotVisibility(4)" class="px-2.5 py-2 rounded-lg bg-slate-800 border border-slate-700 text-cyan-300 text-[11px] font-semibold cursor-pointer">Lihat</button>
+          </div>
+          <div class="flex items-center gap-1.5">
+            <span class="text-[10px] font-bold text-slate-300 w-16 shrink-0">Kunci 5</span>
+            <input type="password" id="geminiKey5" autocomplete="off" placeholder="Gemini Kunci 5 (pilihan)" class="flex-1 bg-slate-950 border border-slate-700 rounded-lg px-2.5 py-2 text-xs font-mono text-slate-200 outline-none">
+            <button type="button" id="toggleGemKeyBtn5" onclick="toggleGeminiSlotVisibility(5)" class="px-2.5 py-2 rounded-lg bg-slate-800 border border-slate-700 text-cyan-300 text-[11px] font-semibold cursor-pointer">Lihat</button>
+          </div>
+        </div>
+        <div id="singleApiKeyRow" class="hidden flex gap-2">
+          <input type="password" id="apiKeyInput" autocomplete="off" placeholder="Tampal kunci API di sini..." class="flex-1 bg-slate-950 border border-slate-700 rounded-lg px-2.5 py-2 text-xs font-mono text-slate-200 outline-none" oninput="syncKeyRevealButton()">
           <button type="button" id="toggleKeyBtn" onclick="toggleKeyVisibility()" class="hidden px-3 py-2 rounded-lg bg-slate-800 border border-slate-700 text-cyan-300 text-xs font-semibold cursor-pointer">Lihat</button>
         </div>
         <div class="set-row !border-0 !px-0">
@@ -1889,7 +1921,7 @@ input, select, textarea { min-width: 0; max-width: 100%; }
     <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-cyan-500/10 border border-cyan-400/30 text-cyan-300 text-xs font-semibold mb-3">
       <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span><span data-i18n="sysBadge">Sistem Diagnostik Komponen</span>
     </div>
-    <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight bg-gradient-to-r from-white via-cyan-200 to-cyan-400 bg-clip-text text-transparent select-none"><span id="secretLightningTrigger" onclick="handleSecretLightningTap(event)" class="inline-block px-1.5 py-0.5 text-white cursor-default">⚡</span>Electro_Scan_Pro <span id="appVersionBadge" class="text-xs sm:text-sm align-middle px-2 py-0.5 rounded-full bg-emerald-500/20 border border-emerald-400/40 text-emerald-300 font-bold">v12.2</span></h1>
+    <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight bg-gradient-to-r from-white via-cyan-200 to-cyan-400 bg-clip-text text-transparent select-none"><span id="secretLightningTrigger" onclick="handleSecretLightningTap(event)" class="inline-block px-1.5 py-0.5 text-white cursor-default">⚡</span>Electro_Scan_Pro <span id="appVersionBadge" class="text-xs sm:text-sm align-middle px-2 py-0.5 rounded-full bg-emerald-500/20 border border-emerald-400/40 text-emerald-300 font-bold">v13.0 Pro</span></h1>
     <p class="text-slate-400 text-sm mt-1" data-i18n="appSubtitle">Apps Pembantu Untuk Technician By JAS DIFIX</p>
 
     <button type="button" id="downloadApkBtn" onclick="downloadApkFile()" class="hidden mt-2 inline-flex items-center justify-center gap-2 min-h-[48px] px-4 py-2.5 rounded-xl bg-emerald-400 text-slate-950 font-extrabold text-sm shadow-lg cursor-pointer">📦 Muat Turun APK Android</button>
@@ -1931,21 +1963,20 @@ input, select, textarea { min-width: 0; max-width: 100%; }
     <!-- Zon Muat Naik & Kamera (1 Kamera Terus + 1 Galeri) -->
     <section id="dropZone" class="rounded-2xl border border-slate-800 bg-slate-950/40 p-3 transition-all relative">
       <div class="grid grid-cols-2 gap-2.5">
-        <button type="button" id="openLiveCameraBtn" onclick="openCameraSmart()" class="min-h-[54px] rounded-xl border border-dashed border-emerald-400/60 bg-emerald-500/15 hover:bg-emerald-500/25 transition-all flex items-center justify-center gap-2 px-3.5 py-3 text-emerald-300 font-bold text-xs sm:text-sm cursor-pointer select-none text-center">
-          <span class="text-lg">📷</span><span data-i18n="openCameraBtn">Buka Kamera</span>
-        </button>
-        <button type="button" id="galleryPickerBtn" onclick="openGalleryDirectly()" class="min-h-[54px] rounded-xl border border-dashed border-sky-400/50 bg-sky-500/10 hover:bg-sky-500/20 transition-all flex items-center justify-center gap-2 px-3.5 py-3 text-sky-300 font-semibold text-xs sm:text-sm cursor-pointer select-none text-center">
-          <span class="text-lg">🖼️</span><span data-i18n="galleryBtn">Pilih Dari Galeri</span>
-        </button>
+        <div id="openLiveCameraBtn" class="relative overflow-hidden min-h-[54px] rounded-xl border border-dashed border-emerald-400/60 bg-emerald-500/15 hover:bg-emerald-500/25 transition-all flex items-center justify-center gap-2 px-3.5 py-3 text-emerald-300 font-bold text-xs sm:text-sm cursor-pointer select-none text-center">
+          <span class="text-lg pointer-events-none">📷</span><span data-i18n="openCameraBtn" class="pointer-events-none">Buka Kamera</span>
+          <input type="file" id="cameraInput" accept="image/*" capture="environment" onclick="if(!isMobileCameraDevice()){ event.preventDefault(); startLiveCamera(false); }" onchange="if(this.files&&this.files[0]){handleFile(this.files[0]);this.value='';}" class="direct-file-overlay" aria-label="Buka Kamera">
+        </div>
+        <div id="galleryPickerBtn" class="relative overflow-hidden min-h-[54px] rounded-xl border border-dashed border-sky-400/50 bg-sky-500/10 hover:bg-sky-500/20 transition-all flex items-center justify-center gap-2 px-3.5 py-3 text-sky-300 font-semibold text-xs sm:text-sm cursor-pointer select-none text-center">
+          <span class="text-lg pointer-events-none">🖼️</span><span data-i18n="galleryBtn" class="pointer-events-none">Pilih Dari Galeri</span>
+          <input type="file" id="uploadInput" accept="image/*" onchange="if(this.files&&this.files[0]){handleFile(this.files[0]);this.value='';}" class="direct-file-overlay" aria-label="Pilih Dari Galeri">
+        </div>
       </div>
       <div class="flex justify-center mt-2.5">
         <button type="button" onclick="autoCropToComponent()" class="w-1/2 min-h-[44px] rounded-xl border border-dashed border-amber-400/50 bg-amber-500/10 hover:bg-amber-500/20 transition-all flex items-center justify-center gap-2 px-3 py-2 text-amber-300 font-semibold text-xs cursor-pointer">
           <span>✂️</span><span data-i18n="autoCrop">Auto Potong</span>
         </button>
       </div>
-
-      <input type="file" id="cameraInput" accept="image/*" capture="environment" class="hidden-file-input">
-      <input type="file" id="uploadInput" accept="image/*" class="hidden-file-input">
       <input type="file" id="videoCaptureInput" accept="video/*" capture="environment" onchange="handleVideoFileSelect(event)" class="hidden-file-input">
       <div id="cameraFallbackNotice" class="hidden mt-3 rounded-xl bg-amber-500/10 border border-amber-400/40 p-3 text-xs text-amber-200"></div>
     </section>
@@ -2120,14 +2151,14 @@ input, select, textarea { min-width: 0; max-width: 100%; }
       <label for="manualCode" class="block text-xs font-medium text-slate-400 mb-2" data-i18n="manualSearchLabel">⌨️ Carian Kod Manual:</label>
       <div class="flex flex-col sm:flex-row gap-2.5">
         <input type="text" id="manualCode" placeholder="IC, Transistor, MOSFET, Diod, Resistor..." onkeydown="if(event.key==='Enter') searchByCode()" class="flex-1 bg-slate-950/80 border border-slate-700 focus:border-cyan-400 rounded-xl px-4 py-3 text-sm text-white placeholder-slate-500 outline-none">
-        <div id="searchActionRow" class="grid grid-cols-2 gap-2 w-full sm:w-auto">
-          <div class="flex gap-2 min-w-0">
-            <button type="button" id="quickDecodeBtn" onclick="quickDecodeOnly()" data-i18n="quickDecodeBtn" class="flex-1 min-w-0 px-3 py-3 rounded-xl bg-slate-800 border border-slate-700 text-cyan-300 font-bold text-sm cursor-pointer truncate">⚡ Carian Offline</button>
-            <button type="button" id="stopSearchBtn" onclick="stopCurrentAction()" class="hidden shrink-0 px-3 py-3 rounded-xl bg-rose-500/20 border border-rose-400/50 text-rose-300 font-bold text-sm cursor-pointer whitespace-nowrap" data-i18n="stopBtn">⏹ Berhenti</button>
+        <div id="searchActionRow" class="grid grid-cols-2 gap-2 w-full sm:w-auto" style="display:grid;grid-template-columns:1fr 1fr;">
+          <div class="flex gap-1.5 min-w-0">
+            <button type="button" id="quickDecodeBtn" onclick="quickDecodeOnly()" data-i18n="quickDecodeBtn" class="flex-1 min-w-0 px-3 py-3 rounded-xl bg-slate-800 border border-slate-700 text-cyan-300 font-bold text-xs sm:text-sm cursor-pointer text-center leading-snug">⚡ Carian Offline</button>
+            <button type="button" id="stopSearchBtn" onclick="stopCurrentAction()" class="hidden shrink-0 px-2.5 py-3 rounded-xl bg-rose-500/20 border border-rose-400/50 text-rose-300 font-bold text-xs cursor-pointer whitespace-nowrap" data-i18n="stopBtn">⏹ Berhenti</button>
           </div>
-          <div class="flex gap-2 min-w-0">
-            <button type="button" id="checkCodeBtn" onclick="searchByCode()" data-i18n="checkCodeBtn" class="flex-1 min-w-0 px-3 py-3 rounded-xl bg-cyan-400 hover:bg-cyan-300 text-slate-950 font-extrabold text-sm cursor-pointer truncate">🔍 Carian Online</button>
-            <button type="button" id="stopOnlineSearchBtn" onclick="stopCurrentAction()" class="hidden shrink-0 px-3 py-3 rounded-xl bg-rose-500/20 border border-rose-400/50 text-rose-300 font-bold text-sm cursor-pointer whitespace-nowrap" data-i18n="stopBtn">⏹ Berhenti</button>
+          <div class="flex gap-1.5 min-w-0">
+            <button type="button" id="checkCodeBtn" onclick="searchByCode()" data-i18n="checkCodeBtn" class="flex-1 min-w-0 px-3 py-3 rounded-xl bg-cyan-400 hover:bg-cyan-300 text-slate-950 font-extrabold text-xs sm:text-sm cursor-pointer text-center leading-snug">🔍 Carian Online</button>
+            <button type="button" id="stopOnlineSearchBtn" onclick="stopCurrentAction()" class="hidden shrink-0 px-2.5 py-3 rounded-xl bg-rose-500/20 border border-rose-400/50 text-rose-300 font-bold text-xs cursor-pointer whitespace-nowrap" data-i18n="stopBtn">⏹ Berhenti</button>
           </div>
         </div>
       </div>
@@ -2155,7 +2186,7 @@ input, select, textarea { min-width: 0; max-width: 100%; }
           <div class="text-sm font-extrabold text-slate-100 whitespace-nowrap" style="overflow:visible;">Pembantu Bengkel</div>
         </div>
         <div class="flex items-center gap-1.5 flex-wrap">
-          <span class="px-2 py-0.5 rounded-full bg-sky-500/15 border border-sky-400/40 text-[10px] font-bold text-sky-300" title="Carian Google Langsung Aktif">🌐 Google Live</span>
+          <button type="button" id="googleLiveToggleBtn" onclick="toggleGoogleLiveMode()" class="px-2 py-0.5 rounded-full bg-slate-800 border border-slate-600 text-[10px] font-bold text-slate-300 cursor-pointer" title="Tekan untuk Hidup/Matikan Carian Google Langsung (jimat kuota bila MATI)">🌐 Google Live: MATI</button>
           <span id="gemChatPersistBadge" class="px-2 py-0.5 rounded-full bg-emerald-500/15 border border-emerald-400/40 text-[10px] font-bold text-emerald-300" title="Ingatan Sembang Disimpan Kekal">💾 Ingatan Sambung</span>
           <button type="button" onclick="toggleBenchMemoryDrawer()" class="gem-act-btn" title="Peraturan Bengkel & Memori Juruteknik">🛠️ Peraturan Bengkel</button>
           <button type="button" onclick="clearGeminiAndroidChat()" class="gem-act-btn" title="Sembang Baharu">✨ Baharu</button>
@@ -2233,8 +2264,14 @@ input, select, textarea { min-width: 0; max-width: 100%; }
           <textarea id="gemChatInput" rows="2" placeholder="Tulis soalan atau nota bengkel di sini..." oninput="autoResizeGemChatInput(this)" onkeydown="handleGemChatKeydown(event)" style="width:100%;min-height:42px;"></textarea>
           <div class="flex items-center justify-between gap-2 pt-1 border-t border-slate-800/80 flex-wrap">
             <div class="flex items-center gap-1.5 flex-wrap">
-              <button type="button" onclick="openGemChatFilePicker()" class="gem-circle-btn bg-slate-800 border border-slate-700 text-amber-300 text-sm select-none" title="Muat Naik Fail (Direktori Telefon: Gambar, Video, Audio, PDF & Semua Fail)">📎</button>
-              <button type="button" onclick="openGemChatGalleryDirectly()" class="gem-circle-btn bg-slate-800 border border-sky-400/50 text-sky-300 text-sm select-none" title="Galeri Telefon (Video & Gambar)">🖼️</button>
+              <div class="relative overflow-hidden gem-circle-btn bg-slate-800 border border-slate-700 text-amber-300 text-sm select-none" title="Muat Naik Fail (Direktori Telefon: Gambar, Video, Audio, PDF & Semua Fail)">
+                <span class="pointer-events-none">📎</span>
+                <input type="file" id="gemChatMediaInput" accept="*/*" onclick="closeGemChatCamMenu()" onchange="handleGemChatMediaSelect(event)" class="direct-file-overlay" aria-label="Muat Naik Fail">
+              </div>
+              <div class="relative overflow-hidden gem-circle-btn bg-slate-800 border border-sky-400/50 text-sky-300 text-sm select-none" title="Galeri Telefon (Video & Gambar)">
+                <span class="pointer-events-none">🖼️</span>
+                <input type="file" id="gemChatGalleryInput" accept="image/*,video/*" onclick="closeGemChatCamMenu()" onchange="handleGemChatMediaSelect(event)" class="direct-file-overlay" aria-label="Galeri Telefon">
+              </div>
               <button type="button" id="gemChatCamMenuBtn" onclick="toggleGemChatCamMenu()" class="gem-circle-btn bg-slate-800 border border-emerald-400/50 text-emerald-300 text-sm select-none" title="Kamera Telefon (Tangkap Gambar / Rakam Video)">📷</button>
               <button type="button" id="gemChatTtsToggleBtn" onclick="toggleGemChatTtsPlayStop()" class="gem-circle-btn bg-slate-800 border border-slate-700 text-emerald-300 text-sm select-none" title="Baca Semula / Henti Suara">🔊</button>
               <button type="button" id="gemChatMicBtn" onclick="toggleGemChatVoiceStable()" class="gem-circle-btn bg-slate-800 border border-slate-700 text-cyan-300 text-sm select-none" title="Tekan untuk Mula / Henti Bercakap">🎙️</button>
@@ -2244,8 +2281,7 @@ input, select, textarea { min-width: 0; max-width: 100%; }
               <button type="button" id="gemChatStopBtn" onclick="stopGeminiAndroidChat()" class="hidden gem-circle-btn bg-rose-500/20 border border-rose-400/60 text-rose-300 font-extrabold text-xs" title="Henti">⏹</button>
             </div>
           </div>
-          <input type="file" id="gemChatMediaInput" accept="*/*" onchange="handleGemChatMediaSelect(event)" class="hidden-file-input">
-          <input type="file" id="gemChatGalleryInput" accept="image/*,video/*" onchange="handleGemChatMediaSelect(event)" class="hidden-file-input">
+
           <input type="file" id="gemChatNativePhotoInput" accept="image/*" capture="environment" onchange="handleGemChatMediaSelect(event)" class="hidden-file-input">
           <input type="file" id="gemChatNativeVideoInput" accept="video/*" capture="environment" onchange="handleGemChatMediaSelect(event)" class="hidden-file-input">
         </div>
@@ -2586,22 +2622,22 @@ input, select, textarea { min-width: 0; max-width: 100%; }
   </section>
 
   <footer class="text-center text-xs text-slate-500 mt-6 space-y-1">
-    <div data-i18n="footerText">Electro_Scan_Pro v12.2 &bull; Jas Difix &bull; Carian Google Langsung + Memori Sambung + Analisis Litar Pintar</div>
+    <div data-i18n="footerText">Electro_Scan_Pro v13.0 Pro &bull; Jas Difix &bull; Carian Google Langsung + Memori Sambung + Analisis Litar Pintar</div>
     <div id="footerLicenseBadge" class="text-[11px] text-emerald-400/75 font-mono"></div>
   </footer>
 </div>
 
 <script>
 // ===================== 0. KONSTAN & STORAN =====================
-const APP_VERSION = "v12.2";
+const APP_VERSION = "v13.0 Pro";
 function encAttr(s){ return encodeURIComponent(String(s==null?"":s)).replace(/'/g,"%27"); }
 const REFUSAL_VIDEO_RE = /(?:tidak|tak)\s+(?:dapat|boleh)\s+(?:membaca|menonton|melihat|memproses|menganalisis)[^.\n]{0,30}(?:video|fail)|cannot\s+(?:watch|read|view|process|analy[sz]e)[^.\n]{0,20}(?:video|file)|(?:can't|unable to)\s+(?:watch|view|process|analy[sz]e)[^.\n]{0,20}(?:video|file)/i;
 // Konfigurasi thinking ikut keluarga model (Gemini 4 / 3.8 / 3.7 guna thinkingLevel; 3.5 guna thinkingBudget)
 function geminiThinkingCfg(model, level, budget){
   const m = String(model||"");
   if (/lite/i.test(m)) return null;
-  if (/hydrogen|gemini-4-|3\.8-flash/i.test(m)) return { thinkingLevel: level || "MEDIUM" };
-  if (/3\.5-flash/i.test(m)) return { thinkingBudget: budget || 2048 };
+  if (/hydrogen|gemini-4-|3\.8-flash/i.test(m)) return { thinkingLevel: "LOW" };
+  if (/3\.5-flash/i.test(m)) return { thinkingBudget: 0 };
   return null;
 }
 const STORAGE_PHONE_BIND_KEY = "jas_electroscan_phone_bind_v1";
@@ -2637,6 +2673,30 @@ const STORAGE_BEEP_KEY = "jas_beep_done_v1";
 const STORAGE_GANTI_MODE_KEY = "jas_ganti_mode_v1";
 const STORAGE_SUN_MODE_KEY = "jas_sun_mode_v1";
 const STORAGE_SAVE_PHOTO_KEY = "jas_save_photo_record_v1";
+const STORAGE_GOOGLE_LIVE_KEY = "jas_google_live_enabled_v1";
+
+function getGoogleLiveEnabled() {
+  return safeStorageGet(STORAGE_GOOGLE_LIVE_KEY) === "1";
+}
+function updateGoogleLiveBtnUi() {
+  const btn = document.getElementById("googleLiveToggleBtn");
+  if (!btn) return;
+  const on = getGoogleLiveEnabled();
+  if (on) {
+    btn.textContent = "🌐 Google Live: HIDUP";
+    btn.className = "px-2 py-0.5 rounded-full bg-sky-500/20 border border-sky-400/50 text-[10px] font-bold text-sky-200 cursor-pointer";
+  } else {
+    btn.textContent = "🌐 Google Live: MATI";
+    btn.className = "px-2 py-0.5 rounded-full bg-slate-800 border border-slate-600 text-[10px] font-bold text-slate-300 cursor-pointer";
+  }
+}
+function toggleGoogleLiveMode() {
+  const next = !getGoogleLiveEnabled();
+  safeStorageSet(STORAGE_GOOGLE_LIVE_KEY, next ? "1" : "0");
+  updateGoogleLiveBtnUi();
+  showToast(next ? "🌐 Google Live HIDUP (guna kuota carian)" : "⚡ Google Live MATI (jimat kuota & lebih stabil)", "info");
+}
+document.addEventListener("DOMContentLoaded", function () { try { updateGoogleLiveBtnUi(); } catch (e) {} });
 
 function getUiFontScale() {
   let v = safeStorageGet(STORAGE_UI_FONT_KEY);
@@ -2905,12 +2965,27 @@ function syncAppSettingsForm() {
 
 // Kunci API terbina dalam (APK / edisi bengkel) — HANYA 2 kunci yang dibenarkan pengguna
 const BUNDLED_API_KEYS = {
-  gemini: "AQ.Ab8RN6JUfBj-GrN8M7kjXwgSg-4S6DPpaXki1__AwO7aBDe4WQ",
-  openrouter: "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"
+  gemini: "AQ.Ab8RN6JWxk3M0DvlbK5F2GzCVm9xxNeHlVvyP2rBIcHvAy-5aA",
+  openrouter: "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"
 };
 
 function seedBundledApiKeysIfNeeded() {
   try {
+    // Buang semua kunci lalai lama (Gemini & OpenRouter) jika masih tersimpan dalam storan
+    try {
+      const oldKeys = [
+        { sk: "jas_ai_provider_cfg_gemini", bad: "AQ.Ab8RN6JUfBj-GrN8M7kjXwgSg-4S6DPpaXki1__AwO7aBDe4WQ" },
+        { sk: "jas_ai_provider_cfg_openrouter", bad: "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" }
+      ];
+      oldKeys.forEach(function (item) {
+        const raw = safeStorageGet(item.sk);
+        if (raw && raw.indexOf(item.bad) !== -1) {
+          const obj = JSON.parse(raw);
+          obj.apiKey = "";
+          safeStorageSet(item.sk, JSON.stringify(obj));
+        }
+      });
+    } catch (eClean) {}
     Object.keys(BUNDLED_API_KEYS).forEach(function (prov) {
       const key = BUNDLED_API_KEYS[prov];
       if (!key) return;
@@ -4733,7 +4808,44 @@ function syncKeyRevealButton() {
   }
 }
 
+function toggleGeminiSlotVisibility(slot) {
+  const inp = document.getElementById('geminiKey' + slot);
+  const btn = document.getElementById('toggleGemKeyBtn' + slot);
+  if (!inp || !btn) return;
+  if (inp.type === 'password') {
+    inp.type = 'text';
+    btn.textContent = 'Sembunyi';
+  } else {
+    inp.type = 'password';
+    btn.textContent = 'Lihat';
+  }
+}
+
+function populateGeminiKeySlots(combinedStr) {
+  const parts = String(combinedStr || '').split(/[\s,;]+/).map(k => k.trim()).filter(Boolean);
+  for (let i = 1; i <= 5; i++) {
+    const inp = document.getElementById('geminiKey' + i);
+    const btn = document.getElementById('toggleGemKeyBtn' + i);
+    if (inp) {
+      inp.value = parts[i - 1] || '';
+      inp.type = 'password';
+    }
+    if (btn) btn.textContent = 'Lihat';
+  }
+}
+
 function readTypedApiKey() {
+  if (currentProviderKey === 'gemini') {
+    const list = [];
+    for (let i = 1; i <= 5; i++) {
+      const el = document.getElementById('geminiKey' + i);
+      if (el) {
+        const v = el.value.trim().replace(/^["']|["']$/g, '');
+        if (v) list.push(v);
+      }
+    }
+    return list.join(', ');
+  }
   const el = document.getElementById('apiKeyInput');
   if (!el) return '';
   return el.value.trim().replace(/^["']|["']$/g, '');
@@ -5089,9 +5201,19 @@ function onProviderChange() {
 
   const sv = loadSavedProviderConfig(currentProviderKey);
   const hasKey = !!effectiveKey;
-  ak.value = personalKey;
-  ak.type = 'password';
-  syncKeyRevealButton();
+  const gemBox = document.getElementById('geminiMultiKeyBox');
+  const singleRow = document.getElementById('singleApiKeyRow');
+  if (currentProviderKey === 'gemini') {
+    if (gemBox) gemBox.classList.remove('hidden');
+    if (singleRow) singleRow.classList.add('hidden');
+    populateGeminiKeySlots(personalKey);
+  } else {
+    if (gemBox) gemBox.classList.add('hidden');
+    if (singleRow) singleRow.classList.remove('hidden');
+    ak.value = personalKey;
+    ak.type = 'password';
+    syncKeyRevealButton();
+  }
   updateKeyStatusLine(hasKey);
   mi.value = (sv && sv.modelId) || cfg.defaultModel;
   if (cu) cu.value = (sv && sv.customUrl) || '';
@@ -5137,23 +5259,22 @@ function saveApiKey() {
     customUrl: cu
   }));
   safeStorageSet('jas_ai_active_provider', currentProviderKey);
-  const input = document.getElementById('apiKeyInput');
-  if (input) {
-    input.value = ak;
-    input.type = 'password';
-    input.placeholder = ak
-      ? t('keyHiddenPh')
-      : (storedOrBundledKey(currentProviderKey)
-        ? 'Kosong = guna kunci lalai terbina dalam. Tampal kunci sendiri untuk ganti.'
-        : cfg.keyPlaceholder);
+  if (currentProviderKey === 'gemini') {
+    populateGeminiKeySlots(ak);
+  } else {
+    const input = document.getElementById('apiKeyInput');
+    if (input) {
+      input.value = ak;
+      input.type = 'password';
+      input.placeholder = ak ? t('keyHiddenPh') : cfg.keyPlaceholder;
+    }
+    syncKeyRevealButton();
   }
-  syncKeyRevealButton();
   updateKeyStatusLine(!!storedOrBundledKey(currentProviderKey));
   refreshMultiAiStatusChips();
   if (ak) {
-    showToast(`💾 ${cfg.shortName}: kunci peribadi disimpan (kekal)`, "ok");
-  } else if (storedOrBundledKey(currentProviderKey)) {
-    showToast(`💾 ${cfg.shortName}: petak kosong — guna kunci lalai terbina dalam`, "ok");
+    const keyCount = currentProviderKey === 'gemini' ? ak.split(/[\s,;]+/).filter(Boolean).length : 1;
+    showToast(`💾 ${cfg.shortName}: ${keyCount} kunci disimpan`, "ok");
   } else {
     showToast(`💾 ${cfg.shortName}: tiada kunci`, "warn");
   }
@@ -5407,9 +5528,9 @@ async function executeSingleProviderRequest(providerKey, { promptText, base64Img
     const modelsQueue = [
       mi,
       "gemini-3.8-flash",
-      "gemini-4-hydrogen",
       "gemini-3.5-flash",
-      "gemini-3.5-flash-lite"
+      "gemini-3.5-flash-lite",
+      "gemini-4-hydrogen"
     ].filter((x, i, a) => x && a.indexOf(x) === i);
 
     const triedModels = new Set();
@@ -5427,7 +5548,7 @@ async function executeSingleProviderRequest(providerKey, { promptText, base64Img
       }
 
       const isGemmaModel = /^gemma-/i.test(m);
-      const supportsSearch = !isGemmaModel;
+      const supportsSearch = !isGemmaModel && (typeof getGoogleLiveEnabled === "function" ? getGoogleLiveEnabled() : false);
       const genConfig = {
         maxOutputTokens: Math.max(safeTokenLimit || 2048, 4096),
         temperature: 0.2
@@ -5457,7 +5578,7 @@ async function executeSingleProviderRequest(providerKey, { promptText, base64Img
         const resAttempt = await sendGeminiGenerateRequest(m, keyCandidate, payload, 25000);
         r = resAttempt.response;
         d = resAttempt.data;
-        if (!r.ok && r.status === 400) {
+        if (!r.ok && (r.status === 400 || r.status === 429)) {
           if (basePayloadObj.tools) {
             const noToolPayload = JSON.stringify({
               systemInstruction: { parts: [{ text: wsSysText }] },
@@ -10644,6 +10765,33 @@ function sanitizeScanComponentData(data) {
     }
   }
 
+  // Hormati pilihan Jenis Komponen pengguna (componentHint) apabila AI tersalah label IC sebagai Transistor/SCR
+  try {
+    const hintEl = document.getElementById('componentHint');
+    const activeHint = (hintEl && hintEl.value) ? String(hintEl.value).toUpperCase() : 'AUTO';
+    const curCat = String(data.kategori_komponen || '').toUpperCase();
+    const curPkg = String(data.jenis_pakej || '').toUpperCase();
+    const curName = String(data.nilai_atau_nama || '').toUpperCase();
+    const hasIcPkgOrPinCount = /(DIP|SOP|SOIC|TSSOP|HTSSOP|QFN|QFP|BGA|LGA|SIP)-?\d*|PIN\s*(6|7|8|10|12|14|16|18|20|24|28|32|40|48|64)|(LM\d{3,4}|NE\d{3,4}|TL\d{3,4}|UC\d{4}|OB\d{4}|VIPER\d+|TNY\d+|LNK\d+|ICE\d+|TEA\d+|TDA\d+|TPA\d+|PAM\d+|PT\d{4}|HT\d{4}|MAX\d+|MCP\d+|ATMEGA|STM32|ESP32|24C\d+|25Q\d+|W25Q\d+|AMS1117)/i.test(`${curPkg} ${curName} ${spec}`);
+
+    if (activeHint === 'IC') {
+      if (!/IC|LITAR BERSEPADU|INTEGRATED|OP-AMP|PWM|REGULATOR|MCU|EEPROM|FLASH|AUDIO|AMP/i.test(curCat)) {
+        data.kategori_komponen = 'Litar Bersepadu (IC)';
+      }
+      if (/TRANSISTOR|SCR|THYRISTOR|TRIAC|MOSFET\s*\(BJT\)|3-PIN/i.test(curPkg) && hasIcPkgOrPinCount) {
+        data.jenis_pakej = hasIcPkgOrPinCount ? (curPkg.match(/(DIP|SOP|SOIC|TSSOP|HTSSOP|QFN|QFP|BGA)-?\d*/i)?.[0] || 'IC SMD (SOP/DIP)') : 'IC SMD';
+      }
+      if (Array.isArray(data.senarai_pin) && data.senarai_pin.length <= 3 && hasIcPkgOrPinCount) {
+        data.senarai_pin = [];
+      }
+    } else if (activeHint === 'AUTO' && hasIcPkgOrPinCount && /TRANSISTOR|SCR|THYRISTOR/i.test(curCat)) {
+      data.kategori_komponen = 'Litar Bersepadu (IC)';
+      if (Array.isArray(data.senarai_pin) && data.senarai_pin.length <= 3) {
+        data.senarai_pin = [];
+      }
+    }
+  } catch (eHint) {}
+
   // Jika true tapi nama kosong & kategori "bukan" — bersihkan kategori
   if (data.adakah_komponen_elektronik === true && /bukan komponen|not electronic/i.test(String(data.kategori_komponen || ""))) {
     data.kategori_komponen = "Komponen Elektronik (perlu sahkan kod)";
@@ -10776,10 +10924,10 @@ function makeFastPcbVariants() {
   const m = getOcrSourceCropMetrics();
   if (!m) return [];
   const { sx, sy, sw, sh } = m;
-  const target = 640;
-  const scale = Math.min(2.5, target / Math.max(sw, sh));
-  const w = Math.max(160, Math.round(sw * scale));
-  const h = Math.max(60, Math.round(sh * scale));
+  const target = 760;
+  const scale = Math.min(3.0, Math.max(1.0, target / Math.max(sw, sh)));
+  const w = Math.max(200, Math.round(sw * scale));
+  const h = Math.max(80, Math.round(sh * scale));
 
   function drawBase() {
     const c = document.createElement('canvas');
@@ -10823,66 +10971,175 @@ function makeFastPcbVariants() {
     ctx.putImageData(img, 0, 0);
   }
 
-  function contrastStretch(g) {
-    let min = 255, max = 0;
-    for (let i = 0; i < g.length; i++) { if (g[i] < min) min = g[i]; if (g[i] > max) max = g[i]; }
-    const range = Math.max(1, max - min);
+  // 3x3 Median filter: buang bintik/grain permukaan plastik IC tanpa mengaburkan tepi huruf
+  function median3x3(g, width, height) {
     const out = new Uint8Array(g.length);
-    for (let i = 0; i < g.length; i++) out[i] = ((g[i] - min) * 255 / range) | 0;
-    return out;
-  }
-
-  function unsharp(g, w, h) {
-    const out = new Uint8Array(g.length);
-    for (let y = 1; y < h - 1; y++) {
-      for (let x = 1; x < w - 1; x++) {
-        const i = y * w + x;
-        const blur = (g[i - w - 1] + g[i - w] + g[i - w + 1] + g[i - 1] + g[i] + g[i + 1] + g[i + w - 1] + g[i + w] + g[i + w + 1]) / 9;
-        let v = g[i] + 1.8 * (g[i] - blur);
-        out[i] = v < 0 ? 0 : v > 255 ? 255 : v | 0;
-      }
-    }
-    return out;
-  }
-
-  function adaptive(g, w, h) {
-    const out = new Uint8Array(g.length);
-    const win = 15;
-    for (let y = 0; y < h; y++) {
-      for (let x = 0; x < w; x++) {
-        let sum = 0, cnt = 0;
-        for (let dy = -win; dy <= win; dy += 3) {
-          const yy = y + dy; if (yy < 0 || yy >= h) continue;
-          for (let dx = -win; dx <= win; dx += 3) {
-            const xx = x + dx; if (xx < 0 || xx >= w) continue;
-            sum += g[yy * w + xx]; cnt++;
-          }
+    const win = new Uint8Array(9);
+    for (let y = 0; y < height; y++) {
+      const ym = y > 0 ? y - 1 : 0;
+      const yp = y < height - 1 ? y + 1 : height - 1;
+      for (let x = 0; x < width; x++) {
+        const xm = x > 0 ? x - 1 : 0;
+        const xp = x < width - 1 ? x + 1 : width - 1;
+        win[0] = g[ym * width + xm]; win[1] = g[ym * width + x]; win[2] = g[ym * width + xp];
+        win[3] = g[y * width + xm];  win[4] = g[y * width + x];  win[5] = g[y * width + xp];
+        win[6] = g[yp * width + xm]; win[7] = g[yp * width + x]; win[8] = g[yp * width + xp];
+        // Insertion sort 9 elements (sangat laju)
+        for (let i = 1; i < 9; i++) {
+          const key = win[i];
+          let j = i - 1;
+          while (j >= 0 && win[j] > key) { win[j + 1] = win[j]; j--; }
+          win[j + 1] = key;
         }
-        const thr = (sum / cnt) - 8;
-        out[y * w + x] = g[y * w + x] > thr ? 255 : 0;
+        out[y * width + x] = win[4];
       }
     }
     return out;
+  }
+
+  // Percentile contrast stretch (3% - 97%) supaya silau kecil tidak menggelapkan tulisan
+  function percentileStretch(g) {
+    const hist = new Uint32Array(256);
+    for (let i = 0; i < g.length; i++) hist[g[i]]++;
+    const n = g.length;
+    const loTarget = (n * 0.03) | 0;
+    const hiTarget = (n * 0.97) | 0;
+    let acc = 0, lo = 0, hi = 255;
+    for (let i = 0; i < 256; i++) { acc += hist[i]; if (acc >= loTarget) { lo = i; break; } }
+    acc = 0;
+    for (let i = 0; i < 256; i++) { acc += hist[i]; if (acc >= hiTarget) { hi = i; break; } }
+    const range = Math.max(12, hi - lo);
+    const out = new Uint8Array(n);
+    for (let i = 0; i < n; i++) {
+      let v = ((g[i] - lo) * 255 / range) | 0;
+      out[i] = v < 0 ? 0 : v > 255 ? 255 : v;
+    }
+    return out;
+  }
+
+  // Otsu global threshold + auto-normalisasi (sentiasa teks HITAM atas latar PUTIH)
+  function otsuBlackOnWhite(g) {
+    const hist = new Uint32Array(256);
+    for (let i = 0; i < g.length; i++) hist[g[i]]++;
+    const total = g.length;
+    let sum = 0;
+    for (let t = 0; t < 256; t++) sum += t * hist[t];
+    let sumB = 0, wB = 0, maxVar = -1, thr = 128;
+    for (let t = 0; t < 256; t++) {
+      wB += hist[t];
+      if (!wB) continue;
+      const wF = total - wB;
+      if (!wF) break;
+      sumB += t * hist[t];
+      const mB = sumB / wB;
+      const mF = (sum - sumB) / wF;
+      const between = wB * wF * (mB - mF) * (mB - mF);
+      if (between > maxVar) { maxVar = between; thr = t; }
+    }
+    const out = new Uint8Array(total);
+    let darkCount = 0;
+    for (let i = 0; i < total; i++) {
+      const v = g[i] > thr ? 255 : 0;
+      out[i] = v;
+      if (v === 0) darkCount++;
+    }
+    // Jika lebih 52% piksel gelap (badan IC hitam, tulisan putih), songsangkan jadi teks hitam atas putih
+    if (darkCount > total * 0.52) {
+      for (let i = 0; i < total; i++) out[i] = 255 - out[i];
+    }
+    return out;
+  }
+
+  // Integral-image adaptive threshold (laju & bersih untuk pencahayaan tak sekata)
+  function integralAdaptive(g, width, height) {
+    const sat = new Float64Array((width + 1) * (height + 1));
+    const stride = width + 1;
+    for (let y = 1; y <= height; y++) {
+      let rowSum = 0;
+      const gOff = (y - 1) * width;
+      const sOff = y * stride;
+      const pOff = (y - 1) * stride;
+      for (let x = 1; x <= width; x++) {
+        rowSum += g[gOff + x - 1];
+        sat[sOff + x] = sat[pOff + x] + rowSum;
+      }
+    }
+    const r = Math.max(12, Math.min(36, Math.round(Math.min(width, height) * 0.14)));
+    const out = new Uint8Array(width * height);
+    let darkCount = 0;
+    for (let y = 0; y < height; y++) {
+      const y1 = Math.max(0, y - r), y2 = Math.min(height, y + r + 1);
+      for (let x = 0; x < width; x++) {
+        const x1 = Math.max(0, x - r), x2 = Math.min(width, x + r + 1);
+        const area = (y2 - y1) * (x2 - x1);
+        const sum = sat[y2 * stride + x2] - sat[y1 * stride + x2] - sat[y2 * stride + x1] + sat[y1 * stride + x1];
+        const mean = sum / area;
+        const v = g[y * width + x] > (mean + 7) ? 0 : 255; // teks cerah -> hitam atas putih
+        out[y * width + x] = v;
+        if (v === 0) darkCount++;
+      }
+    }
+    // Jika teks sebenarnya gelap atas latar cerah
+    if (darkCount > out.length * 0.6) {
+      for (let i = 0; i < out.length; i++) out[i] = 255 - out[i];
+    }
+    return out;
+  }
+
+  function toPaddedDataUrl(srcCanvas, rotDeg, bgColor) {
+    const pad = 22;
+    const swap = (rotDeg === 90 || rotDeg === 270);
+    const outW = (swap ? srcCanvas.height : srcCanvas.width) + pad * 2;
+    const outH = (swap ? srcCanvas.width : srcCanvas.height) + pad * 2;
+    const out = document.createElement('canvas');
+    out.width = outW;
+    out.height = outH;
+    const octx = out.getContext('2d');
+    octx.fillStyle = bgColor || '#ffffff';
+    octx.fillRect(0, 0, outW, outH);
+    octx.save();
+    octx.translate(outW / 2, outH / 2);
+    if (rotDeg) octx.rotate(rotDeg * Math.PI / 180);
+    octx.drawImage(srcCanvas, -srcCanvas.width / 2, -srcCanvas.height / 2);
+    octx.restore();
+    return out.toDataURL('image/png');
   }
 
   const base = drawBase();
   const gObj = toGray(base);
-  const stretched = contrastStretch(gObj.g);
-  const sharp = unsharp(stretched, base.width, base.height);
-  const bin = adaptive(sharp, base.width, base.height);
+  const clean = median3x3(gObj.g, base.width, base.height);
+  const stretched = percentileStretch(clean);
+  const otsu = otsuBlackOnWhite(stretched);
+  const adap = integralAdaptive(stretched, base.width, base.height);
+
+  // Skala kelabu songsang (tulisan putih atas IC hitam -> kelabu gelap atas latar cerah, kekalkan stroke nipis)
+  let meanVal = 0;
+  for (let i = 0; i < stretched.length; i++) meanVal += stretched[i];
+  meanVal /= Math.max(1, stretched.length);
+  const grayBest = new Uint8Array(stretched.length);
+  const needInvertGray = meanVal < 135;
+  for (let i = 0; i < stretched.length; i++) grayBest[i] = needInvertGray ? (255 - stretched[i]) : stretched[i];
+
+  const isPortrait = base.height > base.width * 1.15;
+  const angles = isPortrait ? [90, 270, 0, 180] : [0, 180];
 
   const variants = [];
-  // high contrast
-  write(gObj, sharp);
-  variants.push({ name: 'pcb_sharp', dataUrl: base.toDataURL('image/png') });
-  // adaptive binary
-  write(gObj, bin);
-  variants.push({ name: 'pcb_bin', dataUrl: base.toDataURL('image/png') });
-  // inverted binary (dark marking on light)
-  const inv = new Uint8Array(bin.length);
-  for (let i = 0; i < bin.length; i++) inv[i] = 255 - bin[i];
-  write(gObj, inv);
-  variants.push({ name: 'pcb_inv', dataUrl: base.toDataURL('image/png') });
+  // 1) Adaptive integral bersih (paling kebal silau & permukaan kasar IC)
+  write(gObj, adap);
+  for (const ang of angles) {
+    variants.push({ name: `pcb_adap_${ang}`, dataUrl: toPaddedDataUrl(base, ang, '#ffffff') });
+  }
+  // 2) Grayscale bersih (teks gelap atas putih — kekalkan huruf nipis seperti R / 8 / 5)
+  write(gObj, grayBest);
+  for (const ang of angles.slice(0, 2)) {
+    variants.push({ name: `pcb_gray_${ang}`, dataUrl: toPaddedDataUrl(base, ang, '#ffffff') });
+  }
+  // 3) Otsu bersih (kontras tajam)
+  write(gObj, otsu);
+  for (const ang of angles.slice(0, 2)) {
+    variants.push({ name: `pcb_otsu_${ang}`, dataUrl: toPaddedDataUrl(base, ang, '#ffffff') });
+  }
+
   return variants;
 }
 
@@ -11263,6 +11520,391 @@ function buildOcrVariantCanvases() {
   return variants;
 }
 
+// ===================== ENJIN PADDLEOCR (ONNX RUNTIME WEB - OFFLINE CACHE) =====================
+const PADDLE_IDB_NAME = 'Jas_PaddleOCR_ModelCache_V1';
+const PADDLE_IDB_STORE = 'models';
+const PADDLE_REC_KEY = 'en_PP-OCRv4_rec_infer.onnx';
+const PADDLE_DICT_KEY = 'en_dict.txt';
+
+const PADDLE_ORT_URLS = [
+  './ocr/ort.min.js',
+  'https://cdn.jsdelivr.net/npm/onnxruntime-web@1.19.2/dist/ort.min.js',
+  'https://unpkg.com/onnxruntime-web@1.19.2/dist/ort.min.js'
+];
+
+const PADDLE_REC_URLS = [
+  './ocr/en_PP-OCRv4_rec_infer.onnx',
+  'https://huggingface.co/SWHL/RapidOCR/resolve/main/PP-OCRv4/en_PP-OCRv4_rec_infer.onnx',
+  'https://huggingface.co/monkt/paddleocr-onnx/resolve/main/languages/english/rec.onnx'
+];
+
+const PADDLE_DICT_URLS = [
+  './ocr/en_dict.txt',
+  'https://raw.githubusercontent.com/PaddlePaddle/PaddleOCR/main/ppocr/utils/en_dict.txt',
+  'https://cdn.jsdelivr.net/gh/PaddlePaddle/PaddleOCR@main/ppocr/utils/en_dict.txt',
+  'https://huggingface.co/monkt/paddleocr-onnx/resolve/main/languages/english/dict.txt'
+];
+
+let _paddleOrtLoadPromise = null;
+let _paddleSession = null;
+let _paddleDict = null;
+let _paddleUsingLocalWasm = false;
+
+function _openPaddleModelDb() {
+  return new Promise((resolve) => {
+    try {
+      const req = indexedDB.open(PADDLE_IDB_NAME, 1);
+      req.onupgradeneeded = (e) => {
+        const db = e.target.result;
+        if (!db.objectStoreNames.contains(PADDLE_IDB_STORE)) {
+          db.createObjectStore(PADDLE_IDB_STORE);
+        }
+      };
+      req.onsuccess = (e) => resolve(e.target.result);
+      req.onerror = () => resolve(null);
+    } catch (e) { resolve(null); }
+  });
+}
+
+async function _paddleCacheGet(key) {
+  const db = await _openPaddleModelDb();
+  if (!db) return null;
+  return new Promise((resolve) => {
+    try {
+      const tx = db.transaction(PADDLE_IDB_STORE, 'readonly');
+      const req = tx.objectStore(PADDLE_IDB_STORE).get(key);
+      req.onsuccess = () => resolve(req.result || null);
+      req.onerror = () => resolve(null);
+    } catch (e) { resolve(null); }
+  });
+}
+
+async function _paddleCacheSet(key, val) {
+  const db = await _openPaddleModelDb();
+  if (!db) return;
+  return new Promise((resolve) => {
+    try {
+      const tx = db.transaction(PADDLE_IDB_STORE, 'readwrite');
+      tx.objectStore(PADDLE_IDB_STORE).put(val, key);
+      tx.oncomplete = () => resolve();
+      tx.onerror = () => resolve();
+    } catch (e) { resolve(); }
+  });
+}
+
+function loadOnnxRuntimeWeb() {
+  if (window.ort) return Promise.resolve(window.ort);
+  if (_paddleOrtLoadPromise) return _paddleOrtLoadPromise;
+  _paddleOrtLoadPromise = (async () => {
+    for (const src of PADDLE_ORT_URLS) {
+      try {
+        await new Promise((resolve, reject) => {
+          const s = document.createElement('script');
+          s.src = src;
+          s.async = true;
+          s.onload = () => {
+            if (window.ort) {
+              if (src.startsWith('./ocr/')) _paddleUsingLocalWasm = true;
+              resolve();
+            } else reject(new Error('ort global missing'));
+          };
+          s.onerror = () => { try { s.remove(); } catch (e) {} reject(new Error('load failed: ' + src)); };
+          document.head.appendChild(s);
+        });
+        if (window.ort) return window.ort;
+      } catch (e) {}
+    }
+    _paddleOrtLoadPromise = null;
+    throw new Error('Gagal muat ONNX Runtime Web');
+  })();
+  return _paddleOrtLoadPromise;
+}
+
+async function _fetchAssetWithMirrors(urls, asText, onProgress, label) {
+  let lastErr = null;
+  for (const url of urls) {
+    if (_abortCurrentAction) throw new Error('ABORTED');
+    try {
+      if (onProgress && !url.startsWith('./')) onProgress(`Muat turun ${label}...`);
+      const res = await fetch(url, { mode: url.startsWith('./') ? 'same-origin' : 'cors' });
+      if (!res.ok) continue;
+      if (asText) {
+        const txt = await res.text();
+        if (txt && txt.length > 20 && !txt.trim().startsWith('<')) return txt;
+      } else {
+        const buf = await res.arrayBuffer();
+        if (buf && buf.byteLength > 200000) return new Uint8Array(buf);
+      }
+    } catch (e) {
+      lastErr = e;
+    }
+  }
+  throw lastErr || new Error(`Gagal memuatkan ${label}`);
+}
+
+async function ensurePaddleOcrSession(onProgress) {
+  if (_paddleSession && _paddleDict) return { session: _paddleSession, dict: _paddleDict };
+  if (onProgress) onProgress('Menyediakan enjin PaddleOCR (ONNX)...');
+  const ort = await loadOnnxRuntimeWeb();
+
+  // Wajib numThreads=1 supaya stabil 100% dalam Android WebView & Chrome tanpa COOP/COEP
+  try {
+    ort.env.wasm.numThreads = 1;
+    ort.env.wasm.simd = true;
+    ort.env.wasm.wasmPaths = _paddleUsingLocalWasm
+      ? './ocr/'
+      : 'https://cdn.jsdelivr.net/npm/onnxruntime-web@1.19.2/dist/';
+  } catch (e) {}
+
+  let modelBytes = await _paddleCacheGet(PADDLE_REC_KEY);
+  let dictText = await _paddleCacheGet(PADDLE_DICT_KEY);
+
+  if (!modelBytes) {
+    modelBytes = await _fetchAssetWithMirrors(PADDLE_REC_URLS, false, onProgress, 'model PaddleOCR (~10MB, sekali sahaja)');
+    await _paddleCacheSet(PADDLE_REC_KEY, modelBytes);
+  }
+  if (!dictText) {
+    dictText = await _fetchAssetWithMirrors(PADDLE_DICT_URLS, true, onProgress, 'kamus aksara PaddleOCR');
+    await _paddleCacheSet(PADDLE_DICT_KEY, dictText);
+  }
+
+  const lines = String(dictText).replace(/\r\n/g, '\n').split('\n');
+  while (lines.length && lines[lines.length - 1] === '') lines.pop();
+  _paddleDict = lines;
+
+  if (onProgress) onProgress('Memulakan sesi inferens PaddleOCR...');
+  _paddleSession = await ort.InferenceSession.create(modelBytes, {
+    executionProviders: ['wasm'],
+    graphOptimizationLevel: 'all'
+  });
+  return { session: _paddleSession, dict: _paddleDict };
+}
+
+function _rotateCanvasSimple(srcCanvas, deg) {
+  if (!deg) return srcCanvas;
+  const swap = (deg === 90 || deg === 270);
+  const out = document.createElement('canvas');
+  out.width = swap ? srcCanvas.height : srcCanvas.width;
+  out.height = swap ? srcCanvas.width : srcCanvas.height;
+  const ctx = out.getContext('2d');
+  ctx.fillStyle = '#ffffff';
+  ctx.fillRect(0, 0, out.width, out.height);
+  ctx.translate(out.width / 2, out.height / 2);
+  ctx.rotate(deg * Math.PI / 180);
+  ctx.drawImage(srcCanvas, -srcCanvas.width / 2, -srcCanvas.height / 2);
+  return out;
+}
+
+/** Pisahkan baris teks pada badan IC (cth baris 1: 4580R, baris 2: 2374) menggunakan unjuran mendatar */
+function _segmentIcTextLines(canvas) {
+  const w = canvas.width, h = canvas.height;
+  if (h < 32 || w < 24) return [canvas];
+  const ctx = canvas.getContext('2d', { willReadFrequently: true });
+  const img = ctx.getImageData(0, 0, w, h).data;
+
+  // Kira kepadatan piksel gelap (teks) setiap baris
+  const rowScore = new Float32Array(h);
+  let maxScore = 0;
+  for (let y = 0; y < h; y++) {
+    let dark = 0;
+    let edges = 0;
+    let prev = img[y * w * 4];
+    for (let x = 0; x < w; x++) {
+      const idx = (y * w + x) * 4;
+      const v = img[idx];
+      if (v < 155) dark++;
+      if (Math.abs(v - prev) > 35) edges++;
+      prev = v;
+    }
+    const sc = dark * 0.6 + edges * 1.4;
+    rowScore[y] = sc;
+    if (sc > maxScore) maxScore = sc;
+  }
+
+  if (maxScore < 4) return [canvas];
+  const thr = maxScore * 0.18;
+  const bands = [];
+  let inBand = false, startY = 0;
+  for (let y = 0; y < h; y++) {
+    if (rowScore[y] >= thr && !inBand) {
+      inBand = true; startY = y;
+    } else if ((rowScore[y] < thr || y === h - 1) && inBand) {
+      const endY = rowScore[y] >= thr ? y : y - 1;
+      inBand = false;
+      if (endY - startY >= Math.max(8, h * 0.08)) {
+        bands.push([startY, endY]);
+      }
+    }
+  }
+
+  // Gabungkan jalur yang terlalu rapat
+  const merged = [];
+  for (const b of bands) {
+    if (merged.length && b[0] - merged[merged.length - 1][1] < Math.max(3, h * 0.03)) {
+      merged[merged.length - 1][1] = b[1];
+    } else {
+      merged.push(b);
+    }
+  }
+
+  if (merged.length <= 1 || merged.length > 5) return [canvas];
+
+  const strips = [];
+  for (const [y0, y1] of merged) {
+    const padY = Math.max(4, Math.round((y1 - y0) * 0.22));
+    const sy = Math.max(0, y0 - padY);
+    const ey = Math.min(h, y1 + padY);
+    const sh = ey - sy;
+    if (sh < 10) continue;
+    const sc = document.createElement('canvas');
+    sc.width = w;
+    sc.height = sh;
+    const sctx = sc.getContext('2d');
+    sctx.fillStyle = '#ffffff';
+    sctx.fillRect(0, 0, w, sh);
+    sctx.drawImage(canvas, 0, sy, w, sh, 0, 0, w, sh);
+    strips.push(sc);
+  }
+  return strips.length ? strips : [canvas];
+}
+
+async function _runPaddleRecOnCanvas(session, dict, srcCanvas) {
+  const targetH = 48;
+  const ratio = srcCanvas.width / Math.max(1, srcCanvas.height);
+  const targetW = Math.max(48, Math.min(640, Math.ceil((targetH * ratio) / 4) * 4));
+
+  const tmp = document.createElement('canvas');
+  tmp.width = targetW;
+  tmp.height = targetH;
+  const tctx = tmp.getContext('2d', { willReadFrequently: true });
+  tctx.fillStyle = '#ffffff';
+  tctx.fillRect(0, 0, targetW, targetH);
+  tctx.imageSmoothingEnabled = true;
+  tctx.imageSmoothingQuality = 'high';
+  tctx.drawImage(srcCanvas, 0, 0, targetW, targetH);
+
+  const imgData = tctx.getImageData(0, 0, targetW, targetH).data;
+  const planeSize = targetH * targetW;
+  const floatData = new Float32Array(3 * planeSize);
+
+  for (let i = 0; i < planeSize; i++) {
+    const p = i * 4;
+    // BGR normalized to [-1, 1] for PaddleOCR PP-OCRv4
+    floatData[i] = (imgData[p + 2] / 255.0 - 0.5) / 0.5;
+    floatData[planeSize + i] = (imgData[p + 1] / 255.0 - 0.5) / 0.5;
+    floatData[2 * planeSize + i] = (imgData[p] / 255.0 - 0.5) / 0.5;
+  }
+
+  const inputName = session.inputNames[0];
+  const tensor = new window.ort.Tensor('float32', floatData, [1, 3, targetH, targetW]);
+  const results = await session.run({ [inputName]: tensor });
+  const outTensor = results[session.outputNames[0]];
+  const outData = outTensor.data;
+  const dims = outTensor.dims; // [1, T, C]
+  const T = dims[1];
+  const C = dims[2];
+
+  let prevIdx = 0;
+  let text = '';
+  let confSum = 0;
+  let confCount = 0;
+
+  for (let t = 0; t < T; t++) {
+    const off = t * C;
+    let bestIdx = 0;
+    let bestVal = outData[off];
+    for (let c = 1; c < C; c++) {
+      const v = outData[off + c];
+      if (v > bestVal) {
+        bestVal = v;
+        bestIdx = c;
+      }
+    }
+    if (bestIdx !== 0 && bestIdx !== prevIdx) {
+      const ch = bestIdx - 1 < dict.length ? dict[bestIdx - 1] : ' ';
+      text += ch;
+      // Convert probability (if already softmaxed <=1) or clamp
+      const prob = (bestVal >= 0 && bestVal <= 1.0001) ? bestVal : 0.75;
+      confSum += prob;
+      confCount++;
+    }
+    prevIdx = bestIdx;
+  }
+
+  const avgConf = confCount > 0 ? Math.round((confSum / confCount) * 100) : 0;
+  return { text: text.trim(), confidence: avgConf };
+}
+
+async function recognizeWithPaddleOcr(variants, onProgress) {
+  const { session, dict } = await ensurePaddleOcrSession(onProgress);
+  let best = { text: '', confidence: 0, variant: '', psm: 'PaddleOCR' };
+  let bestScore = -1;
+  const allTexts = [];
+
+  // Pilih varian bersih (gray & adap, 0° & 180°, serta 90°/270° jika potret)
+  const selected = variants.slice(0, 6);
+  const total = selected.length;
+
+  for (let i = 0; i < selected.length; i++) {
+    if (_abortCurrentAction) break;
+    const v = selected[i];
+    if (onProgress) onProgress(`PaddleOCR membaca ${v.name} (${i + 1}/${total})...`);
+
+    const img = await new Promise((resolve, reject) => {
+      const im = new Image();
+      im.onload = () => resolve(im);
+      im.onerror = reject;
+      im.src = v.dataUrl;
+    });
+    const cv = document.createElement('canvas');
+    cv.width = img.width;
+    cv.height = img.height;
+    cv.getContext('2d').drawImage(img, 0, 0);
+
+    // 1) Baca baris-baris yang dipisahkan secara automatik
+    const strips = _segmentIcTextLines(cv);
+    const lineTexts = [];
+    let lineConfSum = 0;
+    let lineConfCnt = 0;
+
+    for (const st of strips) {
+      if (_abortCurrentAction) break;
+      const r = await _runPaddleRecOnCanvas(session, dict, st);
+      if (r.text) {
+        lineTexts.push(r.text);
+        lineConfSum += r.confidence;
+        lineConfCnt++;
+      }
+    }
+
+    // 2) Jika berbilang jalur, baca juga keseluruhan potongan sekali gus sebagai semakan silang
+    if (strips.length > 1 && !_abortCurrentAction) {
+      const rFull = await _runPaddleRecOnCanvas(session, dict, cv);
+      if (rFull.text) allTexts.push(rFull.text);
+    }
+
+    const combined = lineTexts.join(' ').trim();
+    const avgConf = lineConfCnt > 0 ? Math.round(lineConfSum / lineConfCnt) : 0;
+    if (combined) {
+      allTexts.push(combined);
+      const cleanTok = combined.toUpperCase().replace(/[^A-Z0-9]/g, '');
+      const hasDigit = /\d/.test(cleanTok);
+      const looksLikeCode = /(?:[A-Z]{1,4}\d{2,5}[A-Z0-9]{0,3}|\d{3,5}[A-Z]{1,3}|\dR\d|R\d{2})/.test(cleanTok);
+      const score = avgConf + (looksLikeCode ? 35 : (hasDigit ? 12 : -15));
+      if (score > bestScore) {
+        bestScore = score;
+        best = { text: combined, confidence: avgConf, variant: v.name, psm: 'PaddleOCR-v4' };
+      }
+      // Berhenti awal jika keyakinan PaddleOCR sangat tinggi pada kod komponen sah
+      if (looksLikeCode && avgConf >= 82 && cleanTok.length >= 4) {
+        break;
+      }
+    }
+  }
+
+  return { best, allTexts };
+}
+
 function loadTesseractLibrary() {
   if (window.Tesseract) return Promise.resolve(window.Tesseract);
   if (tesseractLoadPromise) return tesseractLoadPromise;
@@ -11339,11 +11981,20 @@ function normalizeOcrConfusions(s) {
 }
 
 /** Skor am calon OCR vs teks — tanpa hardcode part number spesifik */
+function isCodeInAnyOfflineDb(code) {
+  const c = String(code || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
+  if (!c || c.length < 2) return false;
+  if (typeof memFindByKey === 'function' && memFindByKey(c)) return true;
+  if (typeof SMD_MARKING_DB !== 'undefined' && SMD_MARKING_DB[c]) return true;
+  if (typeof builtInNormalizedIndex !== 'undefined' && builtInNormalizedIndex && builtInNormalizedIndex[c]) return true;
+  return false;
+}
+
 function scoreOcrCandidate(code, ocrCompact, ocrSoft) {
   const c = String(code || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
   if (!c || c.length < 2) return -999;
   let s = 0;
-  const inDb = !!(typeof SMD_MARKING_DB !== 'undefined' && SMD_MARKING_DB[c]);
+  const inDb = isCodeInAnyOfflineDb(c);
   if (inDb) s += 100;
 
   // Kod panjang alphanumerik dalam DB + sepadan OCR = hampir pasti betul
@@ -11445,8 +12096,8 @@ function rankOcrCandidateList(candidates, rawOcrText) {
   const scored = (candidates || []).map(code => {
     const c = String(code).toUpperCase().replace(/[^A-Z0-9]/g, '');
     let score = scoreOcrCandidate(code, ocrCompact, ocrSoft);
-    // Utamakan kuat yang memang ada dalam DB (macam Carian Offline)
-    if (typeof SMD_MARKING_DB !== 'undefined' && SMD_MARKING_DB[c]) score += 80;
+    // Utamakan kuat yang memang ada dalam DB (IndexedDB / JSON / terbina dalam)
+    if (isCodeInAnyOfflineDb(c)) score += 95;
     return { code: c, score };
   });
   // unique keep best score
@@ -11472,36 +12123,45 @@ function fuzzyRecoverCodesFromOcr(rawText, existingCandidates) {
 
   const soft = normalizeOcrConfusions(rawText);
   const compact = soft.replace(/[^A-Z0-9]/g, '');
-  const dbKeys = Object.keys(SMD_MARKING_DB || {});
+  // Gabungkan kunci daripada DB pengguna (IndexedDB/JSON) + pek terbina dalam untuk pembetulan 1 aksara tepat
+  const dbKeySet = new Set(Object.keys(SMD_MARKING_DB || {}));
+  try {
+    if (typeof fastMemoryAliases === 'object' && fastMemoryAliases) Object.keys(fastMemoryAliases).forEach(k => dbKeySet.add(k));
+    if (typeof bundledAliases === 'object' && bundledAliases) Object.keys(bundledAliases).forEach(k => dbKeySet.add(k));
+  } catch (e) {}
 
-  // 1) Semua kunci DB yang mengandungi nombor 3–5 digit dari OCR (am, bukan hardcode)
-  const nums = compact.match(/\d{3,5}/g) || [];
-  const numSet = [...new Set(nums)];
-  for (const num of numSet) {
-    for (const k of dbKeys) {
-      if (k.includes(num) && k.length <= num.length + 7) push(k);
+  // Pembetulan 1 aksara (Levenshtein <= 1) hanya terhadap kod SEBENAR dalam DB (cth 458OR -> 4580R)
+  const rawToks = soft.replace(/[^A-Z0-9\s]/g, ' ').split(/\s+/).filter(t => t.length >= 4 && t.length <= 12 && /\d/.test(t));
+  for (const tok of rawToks) {
+    if (dbKeySet.has(tok)) { push(tok); continue; }
+    // Cuba tukar kekeliruan lazim 0<->O, 1<->I, 5<->S, 8<->B
+    const swapVariants = [
+      tok.replace(/O/g, '0'),
+      tok.replace(/0/g, 'O'),
+      tok.replace(/I/g, '1'),
+      tok.replace(/S/g, '5'),
+      tok.replace(/B/g, '8')
+    ];
+    for (const sv of swapVariants) {
+      if (dbKeySet.has(sv)) push(sv);
+    }
+    if (dbKeySet.size <= 6000) {
+      for (const dk of dbKeySet) {
+        if (Math.abs(dk.length - tok.length) > 1 || dk.length < 4) continue;
+        if (levenshtein(tok, dk) <= 1) push(dk);
+      }
     }
   }
 
-  // 2) Prefix + nombor berdekatan dalam OCR (IR/LM/TL/OB/NE/UC/PC/VIPER + digits)
-  const familyRe = /(?:IR|1R|LM|TL|NE|OB|0B|UC|KA|BA|MC|PC|EL|JRC|NJM|UPC|VIPER|VIP|MUR|MUR|MBR|SR|HER|UF|STTH)\s*[\-_]?\s*(\d{2,4})[A-Z]{0,3}/gi;
+  // 1) Hanya terima padanan tepat atau pembetulan ejaan kecil OCR — JANGAN mereka-reka kod komponen yang tiada dalam teks
+  const familyRe = /(?:IR|1R|LM|TL|NE|OB|0B|UC|KA|BA|MC|PC|EL|JRC|NJM|UPC|VIPER|MUR|MBR|SR|HER|UF|STTH|AMS|TDA|TPA|PAM|2SC|2SA|2SD|2SB|BD|TIP|BC|SS|1N|BZX|BTA|BT)\s*[\-_]?\s*(\d{2,5})[A-Z]{0,3}/gi;
   let m;
   const softCopy = soft;
   while ((m = familyRe.exec(softCopy)) !== null) {
     const raw = m[0].toUpperCase().replace(/[^A-Z0-9]/g, '');
     push(raw);
-    // normalise 1R → IR
+    // Hanya betulkan kekeliruan aksara 1R->IR dan 0B->OB tanpa meneka keluarga IC lain
     push(raw.replace(/^1R/, 'IR').replace(/^0B/, 'OB'));
-    if (m[1]) {
-      // also try common suffixes
-      push('IR' + m[1]);
-      push('IR' + m[1] + 'S');
-      push('LM' + m[1]);
-      push('LM' + m[1] + 'N');
-      push('TL' + m[1]);
-      push('OB' + m[1]);
-      push('NE' + m[1]);
-    }
   }
 
   // 3) Norma compact IR/LM/VIPER patterns
@@ -11521,6 +12181,13 @@ function fuzzyRecoverCodesFromOcr(rawText, existingCandidates) {
   }
 
   // 4) Fuzzy edit-distance terhadap DB (calon sedia + seeds dari digit)
+  const dbKeys = Array.from(new Set([
+    ...Object.keys(SMD_MARKING_DB || {}),
+    ...Object.keys(fastMemoryComponents || {}),
+    ...Object.keys(fastMemoryAliases || {}),
+    ...Object.keys(bundledComponents || {}),
+    ...Object.keys(bundledAliases || {})
+  ]));
   const seeds = out.slice(0, 60);
   for (const seed of seeds) {
     if (seed.length < 4) continue;
@@ -11789,17 +12456,17 @@ function rankOfflineMatches(candidates, hint, rawOcrText = '') {
 }
 
 async function recognizeWithVariants(worker, variants, onProgress) {
-  // PSM lebih sedikit untuk laju: 7=single line, 8=single word, 6=block
+  // PSM 6 = blok berbilang baris (terbaik untuk IC 2 baris seperti 4580R / 2374), PSM 7 = 1 baris (perintang/SMD)
   const psmModes = [
-    { psm: '7', label: 'single-line' },
-    { psm: '8', label: 'single-word' }
+    { psm: '6', label: 'block' },
+    { psm: '7', label: 'line' }
   ];
   let best = { text: '', confidence: 0, variant: '', psm: '' };
+  let bestScore = -1;
   const allTexts = [];
   let step = 0;
 
-  // Hanya varian paling berkesan dulu (laju). Varian lain hanya jika tiada hasil baik.
-  const fastNames = ['deblur_sharp', 'fade_boost', 'panel_bright', 'gray_hi', 'adaptive'];
+  const fastNames = ['pcb_adap_0', 'pcb_adap_180', 'pcb_gray_0', 'pcb_gray_180', 'pcb_otsu_0', 'pcb_otsu_180', 'pcb_adap_90', 'pcb_adap_270'];
   const fast = variants.filter(v => fastNames.includes(v.name));
   const rest = variants.filter(v => !fastNames.includes(v.name));
   const ordered = [...fast, ...rest];
@@ -11813,7 +12480,7 @@ async function recognizeWithVariants(worker, variants, onProgress) {
       if (onProgress) onProgress(`OCR ${v.name}/${mode.label} (${step}/${total})...`);
       try {
         await worker.setParameters({
-          tessedit_char_whitelist: 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789.-+',
+          tessedit_char_whitelist: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789.-+/',
           tessedit_pageseg_mode: mode.psm,
           preserve_interword_spaces: '1',
           user_defined_dpi: '300'
@@ -11822,19 +12489,22 @@ async function recognizeWithVariants(worker, variants, onProgress) {
         const text = (result?.data?.text || '').trim();
         const conf = Number(result?.data?.confidence || 0);
         if (text) allTexts.push(text);
-        const looksLikeCode = /[A-Z]{2,}\d{2,}|\d{3,}[A-Z]?/i.test(text.replace(/\s/g, ''));
-        const effectiveConf = looksLikeCode ? conf + 15 : conf;
-        if (text && effectiveConf >= best.confidence) {
+        const cleanTok = text.toUpperCase().replace(/[^A-Z0-9]/g, '');
+        const hasDigit = /\d/.test(cleanTok);
+        const looksLikeCode = /(?:[A-Z]{1,4}\d{2,5}[A-Z0-9]{0,3}|\d{3,5}[A-Z]{1,3}|\dR\d|R\d{2})/.test(cleanTok);
+        const effectiveScore = conf + (looksLikeCode ? 28 : (hasDigit ? 10 : -15));
+        if (text && effectiveScore > bestScore) {
+          bestScore = effectiveScore;
           best = { text, confidence: conf, variant: v.name, psm: mode.label };
         }
-        // Early stop lebih agresif jika nampak kod
-        if (looksLikeCode && conf >= 48 && text.replace(/[^A-Z0-9]/gi, '').length >= 3) {
+        // Berhenti serta-merta bila jumpa kod IC/komponen yang jelas (cth: 4580R) dengan keyakinan baik
+        if (looksLikeCode && conf >= 52 && cleanTok.length >= 3) {
           return { best, allTexts };
         }
       } catch (e) {}
     }
-    // Jika sudah ada teks yang nampak kod selepas 2 varian, berhenti
-    if (vi >= 1 && best.text && /[A-Z]{2,}\d{2,}|\d{3,}/i.test(best.text.replace(/\s/g, ''))) {
+    // Jika sudah dapat bacaan kod meyakinkan selepas cuba 0° dan 180°, terus berhenti
+    if (vi >= 1 && best.confidence >= 50 && best.text && /(?:[A-Z]{1,4}\d{2,5}|\d{3,5}[A-Z])/.test(best.text.toUpperCase().replace(/[^A-Z0-9]/g, ''))) {
       break;
     }
   }
@@ -11882,10 +12552,25 @@ async function scanComponentOffline() {
     if (!variants.length) variants = buildOcrVariantCanvases();
     if (!variants.length) throw new Error('Gagal memproses kawasan potongan gambar. Pastikan bingkai potong tidak terlalu kecil.');
 
-    progressBox(`OCR pantas: ${variants.length} varian PCB...`);
-    const worker = await ensureTesseractWorker((msg) => progressBox(msg));
+    let best = { text: '', confidence: 0, variant: '', psm: '' };
+    let allTexts = [];
+    let ocrEngineUsed = 'PaddleOCR (ONNX)';
 
-    const { best, allTexts } = await recognizeWithVariants(worker, variants, (msg) => progressBox(msg));
+    try {
+      progressBox(`🚀 PaddleOCR (ONNX): ${variants.length} varian PCB...`);
+      const pRes = await recognizeWithPaddleOcr(variants, (msg) => progressBox(msg));
+      best = pRes.best;
+      allTexts = pRes.allTexts;
+    } catch (paddleErr) {
+      if (_abortCurrentAction || (paddleErr && paddleErr.message === 'ABORTED')) throw paddleErr;
+      console.warn('PaddleOCR fallback to Tesseract:', paddleErr);
+      ocrEngineUsed = 'Tesseract (Sandaran)';
+      progressBox(`⚡ Sandaran Tesseract: ${variants.length} varian PCB...`);
+      const worker = await ensureTesseractWorker((msg) => progressBox(msg));
+      const tRes = await recognizeWithVariants(worker, variants, (msg) => progressBox(msg));
+      best = tRes.best;
+      allTexts = tRes.allTexts;
+    }
     const mergedText = [best.text, ...allTexts].filter(Boolean).join('\n');
     let candidates = extractOcrCodeCandidates(mergedText);
     candidates = fuzzyRecoverCodesFromOcr(mergedText, candidates);
@@ -11922,29 +12607,41 @@ const ms = Math.max(0.1, performance.now() - t0).toFixed(0);
     let found = null;
     let foundCode = '';
     const tried = [];
+    const ocrConf = Number(best.confidence || 0);
     // Sudah di-rank oleh rankOcrCandidateList (DB & digit match di atas)
     const ordered = candidates.slice();
-    for (const code of ordered.slice(0, 24)) {
+    for (const code of ordered.slice(0, 12)) {
       tried.push(code);
       let data = null;
       try {
-        data = getSmartDecode(code, hint);
+        // Semak padanan TEPAT dalam pangkalan data terlebih dahulu (elak tekaan meliar)
+        const exactDbHit = (typeof memFindByKey === 'function' && memFindByKey(code)) ||
+          (typeof SMD_MARKING_DB !== 'undefined' && SMD_MARKING_DB[code]) || null;
+
+        if (exactDbHit) {
+          data = exactDbHit;
+        } else if (ocrConf >= 48) {
+          // Hanya guna smart decode jika keyakinan OCR cukup tinggi (>=48%)
+          const smart = getSmartDecode(code, hint);
+          if (smart) {
+            const isPassiveGuess = /PERINTANG|RESISTOR|KAPASITOR|CAPACITOR/i.test(smart.kategori_komponen || '');
+            // Jangan teka perintang/kapasitor secara rambang kecuali jenis dipilih atau keyakinan tinggi (>=60%)
+            if (!isPassiveGuess || hint === 'RESISTOR' || hint === 'CAPACITOR' || (ocrConf >= 60 && /^(?:\d{3,4}|\dR\d|R\d{2}|\d{2}[A-Z])$/.test(code))) {
+              data = smart;
+            }
+          }
+        }
+
         if (data && /PERINTANG|RESISTOR/i.test(data.kategori_komponen || '') && /LM|TL|NE|IR|OB|PC|VIPER/.test(compact) && /^\d{3,4}/.test(code)) {
           data = null;
         }
         if (data && /TRANSISTOR/i.test(data.kategori_komponen || '') && /IR\d{3}|LM\d{2}|VIPER/.test(compact)) {
           data = null;
         }
-        // Elak TL072/LM393 bila OCR nampak marking panjang lain (cth VIPER22A)
-        const longTok = (compact.match(/[A-Z]{3,}\d{2,}[A-Z]{0,3}/g) || []).filter(t => t.length >= 6);
-        if (data && longTok.length && !longTok.some(t => t.includes(code) || code.includes(t.slice(0, 5)))) {
-          const namaU = String(data.nilai_atau_nama || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
-          if (namaU.length <= 5 && !compact.includes(namaU)) data = null;
-        }
-        if (!data && !/LM|TL|NE|IR|OB/.test(compact) && typeof tryDecodeResistor === 'function') {
+        if (!data && (hint === 'RESISTOR' || ocrConf >= 62) && !/LM|TL|NE|IR|OB|PC|VIPER/.test(compact) && typeof tryDecodeResistor === 'function') {
           data = tryDecodeResistor(code);
         }
-        if (!data && typeof tryDecodeCapacitor === 'function') {
+        if (!data && (hint === 'CAPACITOR' || ocrConf >= 62) && typeof tryDecodeCapacitor === 'function') {
           data = tryDecodeCapacitor(code, hint);
         }
       } catch (e) {}
@@ -11960,7 +12657,7 @@ const ms = Math.max(0.1, performance.now() - t0).toFixed(0);
       const top = ordered.slice(0, 10);
       if (!top.length) return '';
       const btns = top.map(c => {
-        const inDb = !!(typeof SMD_MARKING_DB !== 'undefined' && SMD_MARKING_DB[c]);
+        const inDb = isCodeInAnyOfflineDb(c);
         const isActive = c === activeCode;
         const sc = (typeof scoreByCode !== 'undefined' && scoreByCode[c] != null) ? scoreByCode[c] : '';
         const codeEsc = String(c).replace(/\\/g, '\\\\').replace(/'/g, "\\'");
@@ -11973,43 +12670,46 @@ const ms = Math.max(0.1, performance.now() - t0).toFixed(0);
         return `<button type="button" onclick="document.getElementById('manualCode').value='${codeEsc}'; quickDecodeOnly();" class="px-2.5 py-1 rounded-lg border text-[11px] cursor-pointer ${cls}">${escapeHtml(c)}${inDb ? ' ✓' : ''}${scoreTxt}</button>`;
       }).join('');
       return `<div class="mt-2 p-3 rounded-xl bg-slate-950/70 border border-slate-800 text-[11px] text-slate-400">
-        <div class="mb-1">Teks OCR: <span class="font-mono text-slate-300">${escapeHtml(ocrPreview || '-')}</span> <span class="text-slate-500">(${best.confidence|0}% · ${escapeHtml(best.variant||'')})</span></div>
+        <div class="mb-1">Enjin: <strong class="text-cyan-300">${escapeHtml(ocrEngineUsed)}</strong> · Teks: <span class="font-mono text-slate-300">${escapeHtml(ocrPreview || '-')}</span> <span class="text-slate-500">(${best.confidence|0}% · ${escapeHtml(best.variant||'')})</span></div>
         <div class="mb-1.5">Calon berskor (tekan = Carian Offline). ✓ = ada dalam DB:</div>
         <div class="flex flex-wrap gap-1.5">${btns}</div>
       </div>`;
     };
 
-    if (!found) {
-      // Prefer calon yang ada dalam DB untuk auto-isi kotak manual
-      let bestFill = candidates[0];
-      for (const c of candidates) {
-        if (typeof SMD_MARKING_DB !== 'undefined' && SMD_MARKING_DB[c]) { bestFill = c; break; }
-      }
-      if (mc) mc.value = bestFill;
+    // Pilih kod terbaik: 1) Padanan DB offline, 2) Kod alphanumerik ada nombor, 3) Calon tertinggi
+    const dbCandidate = candidates.find(c => isCodeInAnyOfflineDb(c));
+    const alnumCandidate = candidates.find(c => /[A-Z]/.test(c) && /\d/.test(c) && c.length >= 3);
+    const digitCandidate = candidates.find(c => /\d/.test(c) && c.length >= 3);
+    const finalCode = foundCode || dbCandidate || alnumCandidate || digitCandidate || candidates[0];
+
+    if (!finalCode) {
       setStatus(`<div class="p-4 rounded-xl bg-amber-500/10 border border-amber-400/40 text-amber-200 text-xs leading-relaxed space-y-2">
-        <div><strong>⚠️ Kod OCR tiada padanan terus dalam DB offline</strong> (${ms} ms)</div>
-        <div>Kod dicadang <strong>${escapeHtml(bestFill)}</strong> telah diisi ke kotak Carian Manual. Tekan <strong>Carian Offline</strong> atau pilih calon di bawah.</div>
-        <div class="text-slate-400">💡 Petua IC (contoh LM339): potong bingkai <strong>rapat pada tulisan sahaja</strong> (jangan masukkan marking lot/date code atas), naikkan kontras, atau taip kod terus → Carian Offline.</div>
-      </div>` + renderCandidatePanel(bestFill));
-      showToast('⚠️ Tiada padanan DB — kod diisi ke carian manual', 'warn');
+        <div><strong>⚠️ Tiada kod dapat dibaca pada gambar</strong> (${ms} ms · keyakinan ${ocrConf|0}%)</div>
+        <div class="text-slate-300">Potong bingkai rapat pada tulisan sahaja, atau guna <strong>🔍 Imbas Gambar Dalam Talian</strong>.</div>
+      </div>`);
+      showToast('⚠️ Tiada kod dibaca — cuba potong lebih rapat', 'warn');
       return;
     }
 
-    if (mc) mc.value = foundCode;
-    if (!consumeOneTrialUse()) return;
-
-    const dbSaveStatus = typeof autoSaveComponentToDatabase === 'function'
-      ? autoSaveComponentToDatabase(found, foundCode)
-      : null;
-    renderResult(found, `OCR → Offline (${ms} ms, kod: ${foundCode})`, dbSaveStatus);
-    if (typeof saveToHistory === 'function') saveToHistory(found, foundCode);
-
-    if (ra) {
-      ra.insertAdjacentHTML('beforeend', renderCandidatePanel(foundCode));
+    // Terus pindahkan kod ke kotak Carian Kod Manual & jalankan Carian Luar Talian serta-merta
+    if (mc) {
+      mc.value = finalCode;
+      mc.classList.add('border-emerald-400');
+      setTimeout(() => mc.classList.remove('border-emerald-400'), 2200);
+      try { mc.scrollIntoView({ behavior: 'smooth', block: 'center' }); } catch (e) {}
     }
 
-    showToast(`✅ ${found.nilai_atau_nama || foundCode} (OCR → Offline)`, 'ok');
+    showToast(`🚀 ${ocrEngineUsed} (${ocrConf|0}%) → ${finalCode} dipindah ke Carian Manual & dicari terus`, 'ok');
     try { if (typeof notifyScanOutcome === "function") notifyScanOutcome(true); } catch (e) {}
+
+    if (typeof quickDecodeOnly === 'function') {
+      setTimeout(() => {
+        try {
+          quickDecodeOnly();
+          if (ra) ra.insertAdjacentHTML('beforeend', renderCandidatePanel(finalCode));
+        } catch (e) {}
+      }, 80);
+    }
   } catch (err) {
     const msg = err && err.message ? err.message : String(err);
     setStatus(`<div class="p-4 rounded-xl bg-rose-500/10 border border-rose-400/40 text-rose-200 text-xs leading-relaxed space-y-2">
@@ -13017,18 +13717,7 @@ function setupCanvasAndUploadEvents() {
   const dz = document.getElementById('dropZone');
   const cv = document.getElementById('editorCanvas');
 
-  ci.addEventListener('change', e => {
-    if (e.target.files && e.target.files[0]) {
-      handleFile(e.target.files[0]);
-      e.target.value = '';
-    }
-  });
-  ui.addEventListener('change', e => {
-    if (e.target.files && e.target.files[0]) {
-      handleFile(e.target.files[0]);
-      e.target.value = '';
-    }
-  });
+  // Pengendali change sudah dipasang terus secara natif pada input cameraInput & uploadInput
 
   document.querySelectorAll('label[role="button"]').forEach(lbl => {
     lbl.addEventListener('keydown', e => {
@@ -15016,11 +15705,9 @@ async function streamGeminiChatSSE(contents, systemPrompt, apiKey, signal, onChu
       temperature: 0.45,
       maxOutputTokens: 8192
     };
-    if (/hydrogen|3\.8-flash|3\.6-flash|3\.5-flash|2\.5-pro|2\.5-flash/i.test(model) && !/lite/i.test(model)) {
-      genCfg.thinkingConfig = { thinkingBudget: 8192 };
-    }
+    { const _tc = geminiThinkingCfg(model, "LOW", 0); if (_tc) genCfg.thinkingConfig = _tc; }
 
-    const supportsSearchTool = !/^gemma-/i.test(model);
+    const supportsSearchTool = !/^gemma-/i.test(model) && (typeof getGoogleLiveEnabled === "function" ? getGoogleLiveEnabled() : false);
     const bodyObj = {
       systemInstruction: { parts: [{ text: systemPrompt }] },
       contents,
@@ -15043,7 +15730,7 @@ async function streamGeminiChatSSE(contents, systemPrompt, apiKey, signal, onChu
           body: JSON.stringify(bodyObj),
           signal: localCtrl.signal
         });
-        if (!res.ok && res.status === 400 && bodyObj.tools) {
+        if (!res.ok && (res.status === 400 || res.status === 429) && bodyObj.tools) {
           const fallbackBody = { ...bodyObj };
           delete fallbackBody.tools;
           res = await fetch(url, {
@@ -15314,16 +16001,12 @@ function openGemChatFilePicker() {
 
 function openGemChatGalleryDirectly() {
   closeGemChatCamMenu();
-  const old = document.getElementById("gemChatGalleryInput");
-  if (!old) return;
-  const fresh = document.createElement("input");
-  fresh.type = "file";
-  fresh.id = "gemChatGalleryInput";
-  fresh.accept = "image/*,video/*";
-  fresh.className = "hidden-file-input";
-  fresh.onchange = function (ev) { handleGemChatMediaSelect(ev); };
-  old.replaceWith(fresh);
-  try { fresh.click(); } catch (e) {
+  const inp = document.getElementById("gemChatGalleryInput");
+  if (!inp) return;
+  try { inp.removeAttribute("capture"); } catch (e) {}
+  try { inp.accept = "image/*,video/*"; } catch (e) {}
+  try { inp.value = ""; } catch (e) {}
+  try { inp.click(); } catch (e) {
     showToast("⚠️ Gagal membuka galeri telefon pada peranti ini.", "warn");
   }
 }
@@ -16490,10 +17173,8 @@ const _origStreamGeminiChatSSE = window.streamGeminiChatSSE;
 window.streamGeminiChatSSE = async function (contents, systemPrompt, apiKey, signal, onChunk) {
   const savedGem = (typeof loadSavedProviderConfig === "function") ? loadSavedProviderConfig("gemini") : null;
   const prefModel = sanitizeGeminiModelId((savedGem && savedGem.modelId) || "gemini-3.8-flash");
-  let discovered = [];
-  try {
-    discovered = await discoverAvailableGeminiModels(apiKey);
-  } catch (e) {}
+  // Langkau panggilan GET /models supaya balasan terus bermula serta-merta (lebih pantas)
+  const discovered = (_cachedDiscoveredModels && Array.isArray(_cachedDiscoveredModels.models)) ? _cachedDiscoveredModels.models : [];
 
   // Kesan jika mesej mengandungi video / audio / gambar
   const hasVideoOrAudio = Array.isArray(contents) && contents.some(c =>
@@ -16513,10 +17194,10 @@ window.streamGeminiChatSSE = async function (contents, systemPrompt, apiKey, sig
   const fullQueue = Array.from(new Set([
     prefModel,
     "gemini-3.8-flash",
-    "gemini-4-hydrogen",
-    ...baseQueue,
     "gemini-3.5-flash",
-    "gemini-3.5-flash-lite"
+    "gemini-3.5-flash-lite",
+    "gemini-4-hydrogen",
+    ...baseQueue
   ].filter(Boolean)));
 
   const activeQueue = fullQueue.filter(m => !isModelInCooldown("gemini", m) && !/^gemini-(3\.6|3\.7|2\.|1\.)/i.test(m));
@@ -16540,7 +17221,7 @@ window.streamGeminiChatSSE = async function (contents, systemPrompt, apiKey, sig
     { const _tc = geminiThinkingCfg(model, "MEDIUM", hasVideoOrAudio ? 1024 : 2048); if (_tc) genCfg.thinkingConfig = _tc; }
 
     // Untuk video/audio, jangan campurkan tools googleSearch supaya API Gemini memproses video & audio sepenuhnya tanpa HTTP 400
-    const supportsSearchTool = !/^gemma-/i.test(model) && !hasVideoOrAudio;
+    const supportsSearchTool = !/^gemma-/i.test(model) && !hasVideoOrAudio && (typeof getGoogleLiveEnabled === "function" ? getGoogleLiveEnabled() : false);
     const bodyObj = {
       systemInstruction: { parts: [{ text: systemPrompt }] },
       contents,
@@ -16565,7 +17246,7 @@ window.streamGeminiChatSSE = async function (contents, systemPrompt, apiKey, sig
           body: JSON.stringify(bodyObj),
           signal: localCtrl.signal
         });
-        if (!res.ok && res.status === 400 && bodyObj.tools) {
+        if (!res.ok && (res.status === 400 || res.status === 429) && bodyObj.tools) {
           const fallbackBody = { ...bodyObj, generationConfig: { ...bodyObj.generationConfig } };
           delete fallbackBody.tools;
           delete fallbackBody.generationConfig.thinkingConfig;
@@ -17154,16 +17835,12 @@ window.sendGeminiAndroidChat = async function (overridePrompt = null) {
 })();
 
 function openGalleryDirectly() {
-  const old = document.getElementById("uploadInput");
-  if (!old) return;
-  const fresh = document.createElement("input");
-  fresh.type = "file";
-  fresh.id = "uploadInput";
-  fresh.accept = "image/*";
-  fresh.className = "hidden-file-input";
-  fresh.onchange = old.onchange;
-  old.replaceWith(fresh);
-  try { fresh.click(); } catch (e) {
+  const inp = document.getElementById("uploadInput");
+  if (!inp) return;
+  try { inp.removeAttribute("capture"); } catch (e) {}
+  try { inp.accept = "image/*"; } catch (e) {}
+  try { inp.value = ""; } catch (e) {}
+  try { inp.click(); } catch (e) {
     showToast("⚠️ Gagal membuka galeri pada peranti ini.", "warn");
   }
 }
