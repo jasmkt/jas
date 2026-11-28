@@ -6202,7 +6202,23 @@ async function fetchSingleGeminiTtsAudio(chunkText, apiKey, voice, preferredMode
 
   for (const model of modelsToTry) {
     if (!isTtsSpeaking) return { stopped: true };
-    const ttsPayload = JSON.stringify({
+    const ttsPayloadStrict = JSON.stringify({
+      systemInstruction: {
+        parts: [{
+          text: "Read ONLY the exact text provided by the user in natural Bahasa Melayu. Keep all standard international electronics and repair terms exactly as written (such as kapasitor, resistor, dioda, diod, transistor, MOSFET, IGBT, IC, SMD, PCB, PSU, SMPS, GND, VCC, Ohm, Volt, Ampere, Farad). Do NOT add any extra intro, outro, commentary, or filler words."
+        }]
+      },
+      contents: [{ role: "user", parts: [{ text: promptInstruction }] }],
+      generationConfig: {
+        responseModalities: ["AUDIO"],
+        speechConfig: {
+          voiceConfig: {
+            prebuiltVoiceConfig: { voiceName: voice }
+          }
+        }
+      }
+    });
+    const ttsPayloadPlain = JSON.stringify({
       contents: [{ role: "user", parts: [{ text: promptInstruction }] }],
       generationConfig: {
         responseModalities: ["AUDIO"],
@@ -6217,7 +6233,10 @@ async function fetchSingleGeminiTtsAudio(chunkText, apiKey, voice, preferredMode
     for (const kCand of activeKeys) {
       if (!isTtsSpeaking) return { stopped: true };
       try {
-        const { response, data } = await sendGeminiGenerateRequest(model, kCand, ttsPayload, 8500);
+        let { response, data } = await sendGeminiGenerateRequest(model, kCand, ttsPayloadStrict, 8500);
+        if (!response.ok && response.status === 400) {
+          ({ response, data } = await sendGeminiGenerateRequest(model, kCand, ttsPayloadPlain, 8500));
+        }
         if (!response.ok) {
           const msg = data.error?.message || `HTTP ${response.status}`;
           lastErr = new Error(msg);
@@ -6439,17 +6458,141 @@ function isCurrentTtsSession(seq) {
 }
 
 function stripSpeechPreamble(raw) {
-  let t = String(raw || "").trim();
-  // Buang kata pembuka (Baik, Tentu, Okey, Hai...) di permulaan sahaja
-  t = t.replace(/^\s*(?:baiklah|baik|tentu(?:\s*sekali)?|sudah\s*tentu|okey|okay|ok|hai|hello|salam(?:\s*sejahtera)?)\s*[,.!:\-–]+\s*/i, "");
-  // Buang baris pengantar seperti "Berikut adalah penjelasannya:"
-  t = t.replace(/^\s*(?:berikut|ini adalah|inilah)[^\n.!?:]{0,80}:\s*/i, "");
-  return t.trim() || String(raw || "").trim();
+  return String(raw || "")
+    .split(/\n---\n🌐/)[0]
+    .replace(/\[([^\]]+)\]\(https?:\/\/[^)]+\)/g, "$1")
+    .replace(/https?:\/\/\S+/gi, " ")
+    .replace(/[*_`#~]+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function getTtsOwnerGreeting() {
+  try {
+    if (typeof APP_LANG !== "undefined" && APP_LANG === "en") return "";
+    let rawName = "";
+    if (typeof loadBenchMemory === "function") {
+      const mem = loadBenchMemory();
+      rawName = String((mem && mem.name) || "").trim();
+    }
+    const shortName = rawName.split(/[•\-|,/]/)[0].trim();
+    if (shortName && shortName.length <= 24) {
+      return `Salam ${shortName}. `;
+    }
+  } catch (e) {}
+  return "Salam Tuan. ";
+}
+
+
+// ===================== ANDROID NATIVE TTS (CAPACITOR PLUGIN) =====================
+let _nativeTtsVoiceCache = {};
+
+function getCapacitorNativeTts() {
+  try {
+    if (typeof window !== "undefined" && window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.TextToSpeech) {
+      return window.Capacitor.Plugins.TextToSpeech;
+    }
+  } catch (e) {}
+  return null;
+}
+
+async function pickBestNativeTtsVoiceIndex(tts, targetLang) {
+  const cacheKey = targetLang === "en" ? "en" : "ms";
+  if (Object.prototype.hasOwnProperty.call(_nativeTtsVoiceCache, cacheKey)) {
+    return _nativeTtsVoiceCache[cacheKey];
+  }
+  let bestIdx = -1;
+  try {
+    if (typeof tts.getSupportedVoices === "function") {
+      const res = await tts.getSupportedVoices();
+      const list = (res && Array.isArray(res.voices)) ? res.voices : [];
+      let bestScore = -999;
+      for (let i = 0; i < list.length; i++) {
+        const v = list[i] || {};
+        const lang = String(v.lang || "").toLowerCase().replace(/_/g, "-");
+        const name = String(v.name || "").toLowerCase();
+        let score = 0;
+        if (cacheKey === "en") {
+          if (lang === "en-us" || lang === "en-gb") score += 200;
+          else if (lang.startsWith("en")) score += 150;
+          else continue;
+        } else {
+          if (lang === "ms-my") score += 240;
+          else if (lang.startsWith("ms")) score += 200;
+          else if (lang === "id-id" || lang.startsWith("id")) score += 110;
+          else continue;
+        }
+        if (/male|lelaki|osman|rizal|ardi|andika|msm|msc|msb|network|local/i.test(name)) score += 25;
+        if (/female|perempuan|woman|yasmin|gadis|siti|msf|msd/i.test(name)) score -= 45;
+        if (score > bestScore) {
+          bestScore = score;
+          bestIdx = i;
+        }
+      }
+    }
+  } catch (e) {}
+  _nativeTtsVoiceCache[cacheKey] = bestIdx;
+  return bestIdx;
+}
+
+async function tryCapacitorNativeTts(text, sessionSeq) {
+  const tts = getCapacitorNativeTts();
+  if (!tts || typeof tts.speak !== "function") {
+    throw new Error("Plugin Android Native TTS belum dipasang dalam APK");
+  }
+  const targetLang = (typeof APP_LANG !== "undefined" && APP_LANG === "en") ? "en" : "ms";
+  const cleanText = (typeof window.normalizeTextForSpeech === "function")
+    ? window.normalizeTextForSpeech(text, targetLang)
+    : normalizeTextForSpeech(text, targetLang);
+  if (!cleanText || !cleanText.trim()) {
+    return { engine: "native", lang: targetLang === "en" ? "en-US" : "ms-MY" };
+  }
+
+  try { if (typeof tts.stop === "function") await tts.stop(); } catch (e) {}
+
+  const voiceIdx = await pickBestNativeTtsVoiceIndex(tts, targetLang);
+  // Pecahkan teks panjang supaya boleh dihentikan dengan cepat bila pengguna tekan Berhenti
+  const rawSentences = cleanText.match(/[^.!?\n]+[.!?\n]*/g) || [cleanText];
+  const chunks = [];
+  let buf = "";
+  for (const s of rawSentences) {
+    const part = s.trim();
+    if (!part) continue;
+    if ((buf + " " + part).trim().length <= 320) {
+      buf = (buf + " " + part).trim();
+    } else {
+      if (buf) chunks.push(buf);
+      buf = part.slice(0, 350);
+    }
+  }
+  if (buf) chunks.push(buf);
+
+  for (let i = 0; i < chunks.length; i++) {
+    if (sessionSeq !== undefined && typeof isCurrentTtsSession === "function" && !isCurrentTtsSession(sessionSeq)) {
+      try { if (typeof tts.stop === "function") await tts.stop(); } catch (e) {}
+      return { engine: "native", stopped: true };
+    }
+    const opts = {
+      text: chunks[i],
+      lang: targetLang === "en" ? "en-US" : "ms-MY",
+      rate: targetLang === "en" ? 0.95 : 0.93,
+      pitch: targetLang === "en" ? 0.92 : 0.74,
+      volume: 1.0,
+      category: "ambient"
+    };
+    if (voiceIdx >= 0) opts.voice = voiceIdx;
+    await tts.speak(opts);
+  }
+  return { engine: "native", lang: targetLang === "en" ? "en-US" : "ms-MY" };
 }
 
 async function speakText(text) {
   text = stripSpeechPreamble(text);
   if (!text || !text.trim()) return;
+  if (typeof getTtsOwnerGreeting === "function" && !/^salam\b/i.test(text)) {
+    const greet = getTtsOwnerGreeting();
+    if (greet) text = greet + text;
+  }
   stopCurrentTts();
   primeSpeechSynthesisGesture();
   const mySeq = ++_ttsSessionSeq;
@@ -6496,6 +6639,22 @@ async function speakText(text) {
   }
 
   if (enginePref === 'auto' || enginePref === 'browser') {
+    // 1. Jika dalam APK Android & plugin Native TTS dipasang, guna Android Native TTS terus
+    if (typeof getCapacitorNativeTts === "function" && getCapacitorNativeTts()) {
+      try {
+        if (!isCurrentTtsSession(mySeq)) return { engine: 'native', stopped: true };
+        const rNative = await tryCapacitorNativeTts(text, mySeq);
+        if (mySeq === _ttsSessionSeq) {
+          isTtsSpeaking = false;
+          updateGemChatTtsBtnUi(false);
+        }
+        return rNative;
+      } catch (nativeErr) {
+        if (mySeq !== _ttsSessionSeq) return { engine: 'native', stopped: true };
+        errors.push(`Android Native: ${(nativeErr && nativeErr.message) ? nativeErr.message : 'Gagal'}`);
+      }
+    }
+    // 2. Sandaran suara pelayar (Chrome / Web)
     try {
       if (!isCurrentTtsSession(mySeq)) return { engine: 'browser', stopped: true };
       const r = await tryBrowserTts(text, mySeq);
@@ -6532,6 +6691,10 @@ function stopCurrentTts() {
     } catch (e) {}
     currentTtsAudio = null;
   }
+  try {
+    const nTts = (typeof getCapacitorNativeTts === "function") ? getCapacitorNativeTts() : null;
+    if (nTts && typeof nTts.stop === "function") nTts.stop().catch(() => {});
+  } catch (e) {}
   if (window.speechSynthesis) {
     try { window.speechSynthesis.cancel(); } catch (e) {}
   }
@@ -6574,14 +6737,14 @@ async function testTtsVoice() {
   }
   try {
     const testMsgs = {
-      ms: "Selamat sejahtera. Sistem Electro_Scan_Pro bengkel JAS DIFIx sedia membantu kerja pembaikan anda.",
+      ms: "Ujian suara Bahasa Melayu.",
       en: "Hello. Electro_Scan_Pro system is ready.",
       zh: "您好。Electro_Scan_Pro 系统已准备就绪。"
     };
     const r = await speakText(testMsgs[APP_LANG] || testMsgs.ms);
     if (sb) {
       sb.className = "rounded-lg p-2 text-[10px] bg-emerald-500/10 border border-emerald-400/30 text-emerald-200";
-      sb.textContent = `✅ Berjaya (${r && r.engine === 'gemini' ? 'Gemini AI' : 'Suara Pelayar'})`;
+      sb.textContent = `✅ Berjaya (${r && r.engine === 'gemini' ? 'Gemini AI' : (r && r.engine === 'native' ? 'Android Native TTS' : 'Suara Pelayar')})`;
     }
   } catch (err) {
     if (sb) {
@@ -17702,87 +17865,14 @@ window.sendGeminiAndroidChat = async function (overridePrompt = null) {
     return (ranked[0] && ranked[0].score > 0) ? ranked[0].voice : null;
   };
 
-  window.normalizeTextForSpeech = function (raw, langOverride) {
-    const lang = langOverride || (typeof APP_LANG !== "undefined" ? APP_LANG : "ms");
-    let s = String(raw || "")
+  window.normalizeTextForSpeech = function (raw) {
+    return String(raw || "")
+      .split(/\n---\n🌐/)[0]
+      .replace(/\[([^\]]+)\]\(https?:\/\/[^)]+\)/g, "$1")
+      .replace(/https?:\/\/\S+/gi, " ")
       .replace(/[*_`#~]+/g, " ")
-      .replace(/\[(?:MODIF|PNP|INFO|AMARAN|BAIK|ROSAK)[^\]]*\]/gi, " ")
-      .replace(/https?:\/\/\S+/gi, " ");
-
-    if (lang === "en") {
-      s = s
-        .replace(/±/g, " plus minus ")
-        .replace(/kΩ/gi, " kilo ohm ")
-        .replace(/MΩ/g, " mega ohm ")
-        .replace(/Ω/g, " ohm ")
-        .replace(/µF|uF/gi, " microfarad ")
-        .replace(/nF/g, " nanofarad ")
-        .replace(/pF/g, " picofarad ")
-        .replace(/mA/g, " milliamp ")
-        .replace(/(\d+)\.(\d+)/g, "$1 point $2")
-        .replace(/(\d+)\s*V\b/g, "$1 volts")
-        .replace(/(\d+)\s*A\b/g, "$1 amps")
-        .replace(/(\d+)\s*W\b/g, "$1 watts")
-        .replace(/[\/\|•·]+/g, ", ")
-        .replace(/\s+/g, " ")
-        .trim();
-      if (s && !/[.!?]$/.test(s)) s += ".";
-      return s;
-    }
-
-    s = s
-      .replace(/±/g, " lebih kurang ")
-      .replace(/(\d+)\s*[-–~]\s*(\d+)\s*(V|A|W|mA|kΩ|MΩ|Ω|µF|uF|nF|pF|Hz|kHz|MHz)\b/gi, function (_, a, b, unit) {
-        const uMap = {
-          "v": "volt", "a": "ampere", "w": "watt", "ma": "miliampere",
-          "kω": "kilo ohm", "mω": "mega ohm", "ω": "ohm",
-          "µf": "mikrofarad", "uf": "mikrofarad", "nf": "nanofarad", "pf": "pikofarad",
-          "hz": "hertz", "khz": "kilohertz", "mhz": "megahertz"
-        };
-        const uTxt = uMap[String(unit || "").toLowerCase()] || unit;
-        return `${a} hingga ${b} ${uTxt}`;
-      })
-      .replace(/kΩ/gi, " kilo ohm ")
-      .replace(/MΩ/g, " mega ohm ")
-      .replace(/Ω/g, " ohm ")
-      .replace(/µF|uF/gi, " mikrofarad ")
-      .replace(/nF/g, " nanofarad ")
-      .replace(/pF/g, " pikofarad ")
-      .replace(/mH/g, " milihenry ")
-      .replace(/µH|uH/gi, " mikrohenry ")
-      .replace(/kHz/g, " kilohertz ")
-      .replace(/MHz/g, " megahertz ")
-      .replace(/mV/g, " milivolt ")
-      .replace(/kV/g, " kilovolt ")
-      .replace(/mA/g, " miliampere ")
-      .replace(/(\d+)\.(\d+)/g, "$1 perpuluhan $2")
-      .replace(/(\d+)\s*V\b/g, "$1 volt")
-      .replace(/(\d+)\s*A\b/g, "$1 ampere")
-      .replace(/(\d+)\s*W\b/g, "$1 watt")
-      .replace(/\bPCB\b/gi, "papan litar")
-      .replace(/\bPSU\b/gi, "bekalan kuasa")
-      .replace(/\bSMPS\b/gi, "bekalan kuasa pensuisan")
-      .replace(/\bPFC\b/gi, "pembetulan faktor kuasa")
-      .replace(/\bPWM\b/gi, "denyut P W M")
-      .replace(/\bGND\b/gi, "bumi")
-      .replace(/\bVCC\b/gi, "voltan bekalan")
-      .replace(/\bLDO\b/gi, "pengatur voltan")
-      .replace(/\bLED\b/gi, "L E D")
-      .replace(/\bLCD\b/gi, "L C D")
-      .replace(/\bSMD\b/gi, "S M D")
-      .replace(/\bIC\b/gi, "I C")
-      .replace(/\bshort\b/gi, "litar pintas")
-      .replace(/\bopen\b/gi, "terbuka")
-      .replace(/\bEEPROM\b/gi, "memori E E prom")
-      .replace(/\bOp-?Amp\b/gi, "penguat kendalian")
-      .replace(/\bMOSFET\b/gi, "mosfet")
-      .replace(/\bIGBT\b/gi, "I G B T")
-      .replace(/[\/\|•·]+/g, ", ")
       .replace(/\s+/g, " ")
       .trim();
-
-    if (s && !/[.!?]$/.test(s)) s += ".";
-    return s;
   };
 
   window.buildTtsPrompt = function (cleanText) {
@@ -18397,100 +18487,4 @@ function clearUploadedImageAndReset() {
           audio: {
             echoCancellation: true,
             noiseSuppression: true,
-            autoGainControl: true
-          }
-        });
-        _gemMicPermissionGranted = true;
-      } catch (err) {
-        _gemMicPermissionGranted = false;
-        const errName = (err && (err.name || err.message)) ? String(err.name || err.message) : "not-allowed";
-        if (typeof focusNativeKeyboardVoiceOrInput === "function") focusNativeKeyboardVoiceOrInput();
-        showToast("⚠️ Kebenaran mikrofon ditolak (" + errName + "). Sila benarkan Mikrofon di Tetapan Telefon > Aplikasi.", "warn");
-        return;
-      }
-    }
-
-    await beginWorkshopVoiceNow(liveStream);
-  };
-
-  const _prevStopVoice = window.stopGemChatVoiceInput;
-  window.stopGemChatVoiceInput = function () {
-    clearHwRecTimer();
-    _gemChatListening = false;
-    if (_hwMediaRecorder && _hwMediaRecorder.state !== "inactive") {
-      try { _hwMediaRecorder.stop(); } catch (e) {}
-    }
-    if (_hwStream) {
-      _hwStream.getTracks().forEach(tr => { try { tr.stop(); } catch (e) {} });
-      _hwStream = null;
-    }
-    if (typeof _prevStopVoice === "function") {
-      try { _prevStopVoice(); } catch (e) {}
-    }
-    if (!_hwTranscribingPromise) {
-      setMicBtnState("idle");
-    }
-  };
-
-  // Butang 🎙️ Pembantu Bengkel: Kali pertama keluar pop-up sahkan; seterusnya 1-butang mula/henti
-  window.toggleGemChatVoiceStable = async function () {
-    if (typeof _gemChatBusy !== "undefined" && _gemChatBusy) return;
-    if (_hwTranscribingPromise) return;
-
-    // Jika sedang merakam via MediaRecorder, tekan balik untuk HENTI
-    if (_hwMediaRecorder && _hwMediaRecorder.state === "recording") {
-      try { _hwMediaRecorder.stop(); } catch (e) {}
-      return;
-    }
-
-    // Jika sedang mendengar via SpeechRecognition, tekan balik untuk HENTI
-    if (_gemChatListening) {
-      _gemChatListening = false;
-      setMicBtnState("idle");
-      if (_gemChatRecognition) {
-        try {
-          _gemChatRecognition.onend = null;
-          _gemChatRecognition.stop();
-        } catch (e) {}
-        _gemChatRecognition = null;
-      }
-      if (typeof finalizeGemVoiceToInput === "function") {
-        finalizeGemVoiceToInput();
-      }
-      const inp = document.getElementById("gemChatInput");
-      if (inp && inp.value.trim()) {
-        showToast("✅ Sedia — tekan Hantar ➤.", "ok");
-      }
-      return;
-    }
-
-    // Kali pertama onkan mikrofon selepas dipasang -> tunjuk pop-up pengesahan Android
-    if (!hasConfirmedFirstTimeMic()) {
-      openGemMicConfirmModal();
-      return;
-    }
-
-    await beginWorkshopVoiceNow(null);
-  };
-
-  // Jika pengguna terus tekan Hantar ➤ sebaik selesai bercakap, tunggu transkripsi selesai dahulu
-  const _origSendChat = window.sendGeminiAndroidChat;
-  if (typeof _origSendChat === "function") {
-    window.sendGeminiAndroidChat = async function (overridePrompt = null) {
-      if (overridePrompt === null) {
-        if (_hwMediaRecorder && _hwMediaRecorder.state === "recording") {
-          try { _hwMediaRecorder.stop(); } catch (e) {}
-          await new Promise(r => setTimeout(r, 150));
-        }
-        if (_hwTranscribingPromise) {
-          try { await _hwTranscribingPromise; } catch (e) {}
-        }
-      }
-      return await _origSendChat.apply(this, arguments);
-    };
-  }
-})();
-
-</script>
-</body>
-</html>
+            autoGa
