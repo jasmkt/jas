@@ -6286,8 +6286,9 @@ async function tryGeminiTts(text, sessionSeq) {
 
 function tryBrowserTts(text) {
   return new Promise((resolve, reject) => {
-    if (!window.speechSynthesis) {
-      reject(new Error("Pelayar tidak menyokong suara"));
+    const synth = (typeof window !== "undefined" && window.speechSynthesis) ? window.speechSynthesis : null;
+    if (!synth || typeof window.SpeechSynthesisUtterance !== "function") {
+      reject(new Error("Peranti atau pelayar tidak menyokong suara"));
       return;
     }
     try {
@@ -6329,10 +6330,10 @@ function tryBrowserTts(text) {
           safeReject(new Error("Utterance tidak disokong"));
           return;
         }
-        u.lang = APP_LANG === "zh" ? "zh-CN" : (APP_LANG === "en" ? "en-US" : "ms-MY");
-        // BM: lebih perlahan & pitch rendah supaya kedengaran lelaki (banyak enjin pelayar default perempuan)
-        u.rate = APP_LANG === "ms" ? 0.90 : 0.95;
-        u.pitch = APP_LANG === "ms" ? 0.82 : 0.92;
+        u.lang = APP_LANG === "en" ? "en-US" : "ms-MY";
+        // BM: nada garau/lebih rendah & tegas untuk suara lelaki
+        u.rate = APP_LANG === "ms" ? 0.92 : 0.95;
+        u.pitch = APP_LANG === "ms" ? 0.74 : 0.92;
         if (voice) {
           try {
             u.voice = voice;
@@ -6505,7 +6506,8 @@ async function speakText(text) {
       return r;
     } catch (err) {
       if (mySeq !== _ttsSessionSeq) return { engine: 'browser', stopped: true };
-      errors.push(`Pelayar: ${err.message}`);
+      const cleanErr = (err && err.message) ? err.message : "Enjin suara pelayar tidak aktif di WebView";
+      errors.push(`Pelayar: ${cleanErr}`);
     }
   }
 
@@ -17682,7 +17684,8 @@ window.sendGeminiAndroidChat = async function (overridePrompt = null) {
     }
 
     if (/google|natural|online|neural|wavenet|enhanced|premium|network/i.test(name)) score += 35;
-    if (/osman|yasmin|rizal|ardi|gadis|siti|david|daniel/i.test(name)) score += 12;
+    if (/male|lelaki|osman|rizal|ardi|andika|david|daniel|mark|james|ryan|guy/i.test(name)) score += 28;
+    if (/female|perempuan|woman|yasmin|gadis|siti|zira|amy|susan|samantha|karen|moira|tessa|fiona|victoria|hazel|aria|jenny|natasha|maria/i.test(name)) score -= 45;
     if (v.localService) score += 8;
     return score;
   }
@@ -17879,9 +17882,21 @@ window.sendGeminiAndroidChat = async function (overridePrompt = null) {
           const voice = window.getBestMalayOrPreferredVoice(targetLang);
           const u = new SpeechSynthesisUtterance(part);
           window._activeTtsUtterance = u;
-          u.lang = (voice && voice.lang) ? voice.lang : (targetLang === "en" ? "en-US" : "ms-MY");
-          u.rate = 0.95;
-          u.pitch = 1.0;
+          const isMalayTarget = targetLang !== "en";
+          let chosenVoice = voice;
+          if (!chosenVoice && typeof window.speechSynthesis !== "undefined") {
+            const allV = window.speechSynthesis.getVoices() || [];
+            chosenVoice = allV.find(v => /male|lelaki|osman|rizal|ardi|andika|david|daniel|mark|james|ryan|guy/i.test(v.name || "")) || null;
+          }
+          const vName = String((chosenVoice && chosenVoice.name) || "").toLowerCase();
+          const looksFemale = /female|perempuan|woman|yasmin|gadis|siti|zira|amy|susan|samantha|karen|moira|tessa|fiona|victoria|hazel|aria|jenny|natasha|maria/.test(vName);
+          if (looksFemale) {
+            chosenVoice = null;
+          }
+          u.lang = isMalayTarget ? ((chosenVoice && chosenVoice.lang) || "ms-MY") : ((chosenVoice && chosenVoice.lang) || "en-US");
+          u.rate = isMalayTarget ? 0.92 : 0.95;
+          u.pitch = isMalayTarget ? 0.72 : 0.92;
+          voice = chosenVoice;
           u.volume = 1.0;
           if (voice) {
             try { u.voice = voice; } catch (e) {}
