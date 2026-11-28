@@ -1975,13 +1975,13 @@ input, select, textarea { min-width: 0; max-width: 100%; }
     <!-- Zon Muat Naik & Kamera (1 Kamera Terus + 1 Galeri) -->
     <section id="dropZone" class="rounded-2xl border border-slate-800 bg-slate-950/40 p-3 transition-all relative">
       <div class="grid grid-cols-2 gap-2.5">
-        <button type="button" id="openLiveCameraBtn" onclick="window._cameraTarget='scanner'; startLiveCamera(false);" class="relative overflow-hidden min-h-[54px] rounded-xl border border-dashed border-emerald-400/60 bg-emerald-500/15 hover:bg-emerald-500/25 transition-all flex items-center justify-center gap-2 px-3.5 py-3 text-emerald-300 font-bold text-xs sm:text-sm cursor-pointer select-none text-center">
+        <button type="button" id="openLiveCameraBtn" onclick="openNativePhotoCamera('scanner')" class="relative overflow-hidden min-h-[54px] rounded-xl border border-dashed border-emerald-400/60 bg-emerald-500/15 hover:bg-emerald-500/25 transition-all flex items-center justify-center gap-2 px-3.5 py-3 text-emerald-300 font-bold text-xs sm:text-sm cursor-pointer select-none text-center">
           <span class="text-lg pointer-events-none">📷</span><span data-i18n="openCameraBtn" class="pointer-events-none">Buka Kamera</span>
         </button>
         <input type="file" id="cameraInput" accept="image/*" capture="environment" onchange="if(this.files&&this.files[0]){handleFile(this.files[0]);this.value='';}" class="hidden-file-input" aria-label="Buka Kamera">
         <div id="galleryPickerBtn" class="relative overflow-hidden min-h-[54px] rounded-xl border border-dashed border-sky-400/50 bg-sky-500/10 hover:bg-sky-500/20 transition-all flex items-center justify-center gap-2 px-3.5 py-3 text-sky-300 font-semibold text-xs sm:text-sm cursor-pointer select-none text-center">
           <span class="text-lg pointer-events-none">🖼️</span><span data-i18n="galleryBtn" class="pointer-events-none">Pilih Dari Galeri</span>
-          <input type="file" id="uploadInput" accept="image/*" onchange="if(this.files&&this.files[0]){handleFile(this.files[0]);this.value='';}" class="direct-file-overlay" aria-label="Pilih Dari Galeri">
+          <input type="file" id="uploadInput" accept="image/*" onclick="this.removeAttribute('capture')" onchange="if(this.files&&this.files[0]){handleFile(this.files[0]);this.value='';}" class="direct-file-overlay" aria-label="Pilih Dari Galeri">
         </div>
       </div>
       <div class="flex justify-center mt-2.5">
@@ -2258,8 +2258,8 @@ input, select, textarea { min-width: 0; max-width: 100%; }
           </div>
         </div>
         <div id="gemChatCamMenu" class="hidden mb-2 rounded-xl bg-slate-900/95 border border-emerald-400/40 p-2 flex items-center gap-2">
-          <button type="button" onclick="closeGemChatCamMenu(); window._cameraTarget='gemChat'; startLiveCamera(false);" class="flex-1 py-2 px-3 rounded-lg bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-400/40 text-emerald-200 font-bold text-xs text-center cursor-pointer">📸 Tangkap Gambar</button>
-          <button type="button" onclick="closeGemChatCamMenu(); window._videoRecTarget='gemChat'; startVideoRecorderPreview();" class="flex-1 py-2 px-3 rounded-lg bg-rose-500/15 hover:bg-rose-500/25 border border-rose-400/40 text-rose-200 font-bold text-xs text-center cursor-pointer">🎬 Rakam Video</button>
+          <button type="button" onclick="closeGemChatCamMenu(); openNativePhotoCamera('gemChat')" class="flex-1 py-2 px-3 rounded-lg bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-400/40 text-emerald-200 font-bold text-xs text-center cursor-pointer">📸 Tangkap Gambar</button>
+          <button type="button" onclick="closeGemChatCamMenu(); openNativeVideoCamera('gemChat')" class="flex-1 py-2 px-3 rounded-lg bg-rose-500/15 hover:bg-rose-500/25 border border-rose-400/40 text-rose-200 font-bold text-xs text-center cursor-pointer">🎬 Rakam Video</button>
           <button type="button" onclick="closeGemChatCamMenu()" class="px-2.5 py-2 rounded-lg bg-slate-800 text-slate-400 text-xs font-bold cursor-pointer">✕</button>
         </div>
         <div class="gem-pill-bar" style="flex-direction:column;align-items:stretch;gap:0.45rem;border-radius:1.15rem;padding:0.45rem 0.55rem;">
@@ -6795,10 +6795,17 @@ function updateBundledPackUi() {
 async function loadSeparatedDatabasePack(force) {
   try {
     if (!force) {
-      bundledPackState.loaded = false;
-      bundledPackState.count = 0;
-      if (typeof updateBundledPackUi === "function") updateBundledPackUi();
-      return;
+      // Permulaan app: muat pek kecuali pengguna pernah tekan "Kosongkan" (bendera dikekalkan selepas restart)
+      let userDisabled = false;
+      try { userDisabled = safeStorageGet(BUNDLED_PACK_DISABLED_KEY) === "1"; } catch (e) {}
+      if (userDisabled || bundledPackState.disabled) {
+        bundledPackState.disabled = true;
+        bundledPackState.loaded = false;
+        bundledPackState.count = 0;
+        if (typeof updateBundledPackUi === "function") updateBundledPackUi();
+        return;
+      }
+      if (bundledPackState.loaded && bundledPackState.count > 0) return;
     }
     const res = await fetch(GABUNGAN_PACK_URL, { cache: "no-store" });
     if (!res.ok) throw new Error("HTTP " + res.status);
@@ -8899,8 +8906,13 @@ function getSmartDecode(rawCode, componentHint = "AUTO") {
     const keyEnd = icKeys.find(k => k === code || (k.length <= code.length + 5 && k.endsWith(code)));
     if (keyEnd && componentHint !== 'RESISTOR') return SMD_MARKING_DB[keyEnd];
     if (typeof tryDecodeResistor === "function") {
-      const asRes = tryDecodeResistor(code);
-      if (asRes) return asRes;
+      // Nilai mustahil (>100MΩ, cth 4558 -> 45.5GΩ) bukan perintang sebenar — jangan beri jawapan salah
+      let _implausibleRes = false;
+      try { const _rd = decodeSmdResistorCode(code, "auto"); _implausibleRes = !!(_rd && _rd.ohms > 1e8); } catch (e) {}
+      if (!_implausibleRes) {
+        const asRes = tryDecodeResistor(code);
+        if (asRes) return asRes;
+      }
     }
     if (keyEnd) return SMD_MARKING_DB[keyEnd];
   }
@@ -10199,6 +10211,54 @@ function bindCameraGestures() {
   stage.addEventListener('pointercancel', endPtr);
 }
 
+
+/** Buka kamera native telefon (tangkap gambar). target: 'scanner' | 'gemChat'.
+ *  Telefon/APK -> app kamera asal (ada zoom out / lensa ultra-lebar). PC -> webcam dalam aplikasi. */
+function openNativePhotoCamera(target) {
+  target = target || 'scanner';
+  window._cameraTarget = target;
+  if (isMobileCameraDevice()) {
+    const id = target === 'gemChat' ? 'gemChatNativePhotoInput' : 'cameraInput';
+    const inp = document.getElementById(id);
+    if (inp) {
+      try { stopLiveCamera(); } catch (e) {}
+      try { inp.value = ''; } catch (e) {}
+      try { inp.setAttribute('capture', 'environment'); } catch (e) {}
+      inp.click();
+      return;
+    }
+  }
+  startLiveCamera(false);
+}
+
+/** Buka kamera native telefon (rakam video). PC -> perakam dalam aplikasi. */
+function openNativeVideoCamera(target) {
+  target = target || 'scanner';
+  window._videoRecTarget = target;
+  if (isMobileCameraDevice()) {
+    const id = target === 'gemChat' ? 'gemChatNativeVideoInput' : 'videoCaptureInput';
+    const inp = document.getElementById(id);
+    if (inp) {
+      try { closeInAppVideoRecorder(); } catch (e) {}
+      try { stopLiveCamera(); } catch (e) {}
+      try { inp.value = ''; } catch (e) {}
+      try { inp.setAttribute('capture', 'environment'); } catch (e) {}
+      inp.click();
+      return;
+    }
+  }
+  startVideoRecorderPreview();
+}
+
+/** Buka galeri terus (tiada capture) supaya tidak masuk ke kamera. */
+function openGalleryDirect(inputId) {
+  const inp = document.getElementById(inputId);
+  if (!inp) return;
+  try { inp.removeAttribute('capture'); } catch (e) {}
+  try { inp.value = ''; } catch (e) {}
+  inp.click();
+}
+
 /** Butang "Buka Kamera": telefon/APK -> app kamera telefon; PC -> webcam langsung. */
 function openCameraSmart() {
   if (isMobileCameraDevice()) {
@@ -10210,9 +10270,10 @@ function openCameraSmart() {
 
 /** Buka app kamera asal telefon (input capture). Bergantung pada sokongan APK/WebView. */
 function openNativeCameraApp() {
+  const t = window._cameraTarget === 'gemChat' ? 'gemChat' : 'scanner';
   stopLiveCamera();
-  const ci = _camEl('cameraInput');
-  if (ci) ci.click();
+  const ci = _camEl(t === 'gemChat' ? 'gemChatNativePhotoInput' : 'cameraInput');
+  if (ci) { try { ci.value = ''; } catch (e) {} ci.click(); }
 }
 
 async function startLiveCamera(useSpecificDevice = false) {
@@ -12965,6 +13026,21 @@ IMPORTANT: In "senarai_pin", list ALL pins/terminals of the component (not just 
       maxTokens: SAFE_MAX_TOKENS_CODE
     });
     let data = extractJsonFromResponse(res.text);
+    // Jika AI jelas kata input BUKAN komponen elektronik, jangan paksa jadi IC / jangan simpan / jangan tolak percubaan
+    try {
+      const _aiNot = data && (data.adakah_komponen_elektronik === false ||
+        String(data.adakah_komponen_elektronik || '').trim().toLowerCase() === 'false' ||
+        /bukan komponen|not electronic|bukan elektronik/i.test(String(data.kategori_komponen || '')));
+      const _hasPins = data && Array.isArray(data.senarai_pin) && data.senarai_pin.length >= 2;
+      const _hasDigit = /\d/.test(code);
+      const _localHit = (typeof getSmartDecode === 'function') ? getSmartDecode(code, 'AUTO') : null;
+      if (_aiNot && !_localHit && (!_hasDigit || !_hasPins)) {
+        try { stopActionTimer(true); } catch (e) {}
+        ra.innerHTML = `<div class="p-4 rounded-xl bg-amber-500/10 border border-amber-400/40 text-amber-200 text-xs">🚫 "<strong>${escapeHtml(code)}</strong>" bukan kod atau nama komponen elektronik yang dikenali. Semak ejaan kod pada badan komponen, atau cuba <strong>Imbas Gambar</strong>.</div>`;
+        showToast("🚫 Bukan komponen elektronik", "warn");
+        return;
+      }
+    } catch (e) {}
     try {
       if (typeof mergeLocalDbWithAiResult === 'function') {
         data = mergeLocalDbWithAiResult(data, code, 'AUTO');
@@ -14059,9 +14135,11 @@ function formatRecTime(sec) {
 }
 
 function openNativeVideoCameraApp() {
+  const t = window._videoRecTarget === 'gemChat' ? 'gemChat' : 'scanner';
   closeInAppVideoRecorder();
-  const inp = document.getElementById("videoCaptureInput");
-  if (inp) inp.click();
+  window._videoRecTarget = t;
+  const inp = document.getElementById(t === 'gemChat' ? "gemChatNativeVideoInput" : "videoCaptureInput");
+  if (inp) { try { inp.value = ""; } catch (e) {} inp.click(); }
 }
 
 async function openVideoRecorderSmart() {
@@ -14125,7 +14203,7 @@ async function startVideoRecorderPreview() {
   } catch (err) {
     closeInAppVideoRecorder();
     showToast("⚠️ Akses kamera/mikrofon disekat — membuka kamera video telefon...", "warn");
-    const inp = document.getElementById("videoCaptureInput");
+    const inp = document.getElementById(window._videoRecTarget === 'gemChat' ? "gemChatNativeVideoInput" : "videoCaptureInput");
     if (inp) inp.click();
   }
 }
