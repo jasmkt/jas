@@ -5419,23 +5419,7 @@ function extractJsonFromResponse(raw) {
     } catch (e) {}
   }
 
-  // Jika model balas teks biasa tanpa JSON sama sekali, bungkus sebagai objek diagnostik minimal
-  const plain = String(raw).replace(/```[\s\S]*?```/g, '').trim().slice(0, 1200);
-  if (plain && !plain.includes('{') && plain.length > 30) {
-    return {
-      adakah_komponen_elektronik: true,
-      kategori_komponen: "Maklumat AI (teks bebas)",
-      nilai_atau_nama: plain.slice(0, 80).replace(/\s+/g, ' '),
-      jenis_pakej: "-",
-      fungsi_dan_spesifikasi: plain,
-      senarai_pin: [],
-      komponen_gantian: "-",
-      tip_pemeriksaan: "Sila semak datasheet rasmi untuk pengesahan pin dan spesifikasi.",
-      _from_plain_text: true
-    };
-  }
-
-  throw new Error("Respons AI bukan JSON yang sah. Sila cuba lagi atau guna Carian Offline.");
+  throw new Error("Respons AI bukan format JSON yang sah. Sila cuba semula.");
 }
 
 function buildGeminiAuthRequest(baseUrl, apiKey, extraHeaders = {}, forceHeaderAuth = false) {
@@ -10792,16 +10776,13 @@ function getCroppedBase64() {
 // ===================== 10. IMBASAN AI & PENYAHKOD (PROMPT PADAT JIMAT TOKEN) =====================
 function buildScanPrompt(hint) {
   const langInst = {
-    ms: "Bahasa Melayu Malaysia sepenuhnya. KRITIKAL: Jika nampak CIP/IC/transistor/MOSFET/diod/resistor/kapasitor/litar PCB (walaupun marking pudar, logo pelik, atau papan penuh), WAJIB \"adakah_komponen_elektronik\":true. Baca SEMUA baris marking pada badan komponen, nombor silkscreen PCB (cth: U101, Q201, R15, D8), kesan hangus/retak/bocor, dan jejak laluan litar sekitar. Gunakan Carian Google Langsung untuk mengesahkan nombor bahagian (part number) dan pinout tepat. Hanya false jika objek jelas BUKAN elektronik (rokok, kayu, makanan, tangan sahaja).",
-    en: "CRITICAL: Any IC/transistor/MOSFET/diode/resistor/capacitor/PCB circuit must be adakah_komponen_elektronik:true even if marking is faded. Read ALL body markings, PCB silkscreen designators (U1, Q2, R5), burn/bulge damage, and surrounding circuit traces. Use Google Search grounding to verify exact part numbers and pinouts.",
-    zh: "关键：PCB上的IC/晶体管/MOS管/电阻/电容/电路板必须 adakah_komponen_elektronik:true。读取所有丝印代码、电路走线及烧毁痕迹，并结合谷歌搜索核对型号与引脚。"
+    ms: "Bahasa Melayu Malaysia sepenuhnya. Baca kod/teks pada badan IC/komponen secara tepat huruf demi huruf dan nombor demi nombor (jangan reka atau ubah kod seperti MC34063A, LM339, TL431, IRFZ44N). Jika marking tidak cukup jelas untuk dipastikan, nyatakan ketidaktentuan tersebut dengan jujur dalam fungsi_dan_spesifikasi. Hanya tetapkan adakah_komponen_elektronik:true jika ia komponen elektronik sebenar; jika bukan komponen elektronik (contoh: skrin telefon, tangan, objek biasa), tetapkan adakah_komponen_elektronik:false.",
+    en: "Respond in concise English. Read exact alphanumeric body markings character by character without inventing fake part numbers. If marking is unclear, state uncertainty clearly in fungsi_dan_spesifikasi. Set adakah_komponen_elektronik:false for non-electronic objects or phone screens.",
+    zh: "简明中文回答。逐字读取元件表面丝印型号，不得编造型号。若丝印不清请在 fungsi_dan_spesifikasi 中如实说明。非电子元件请设 adakah_komponen_elektronik:false。"
   };
-  return `Senior electronics repair bench specialist analyzing a HIGH-RES photo of a component or PCB circuit section. Type hint:${hint}. ${langInst[APP_LANG] || ""}
-Inspect closely:
-1) Exact top/bottom marking lines & package outline (pins count, heatsink tab, notch/dot orientation).
-2) Surrounding PCB silkscreen labels (e.g. R/C/D/Q/U/IC numbers), nearby components (gate resistors, optocoupler, snubber, current sense resistor), and visible physical faults (burn marks, cracked IC body, bulging capacitor, cold solder).
-3) Verify datasheet pinout & direct plug-and-play replacements via Google Search.
-Return valid compact JSON ONLY (no markdown, up to 24 key pins). Default adakah_komponen_elektronik to true for any electronic part/PCB. JSON schema:{"adakah_komponen_elektronik":true,"kategori_komponen":"","nilai_atau_nama":"","jenis_pakej":"","fungsi_dan_spesifikasi":"","senarai_pin":[{"pin":"1","nama_terminal":"","fungsi_kaki":""}],"komponen_gantian":"","tip_pemeriksaan":""}`;
+  return `Senior electronics repair specialist. Type hint: ${hint}. ${langInst[APP_LANG] || ""}
+Reply with VALID COMPACT JSON ONLY (no markdown, no extra text).
+JSON schema: {"adakah_komponen_elektronik":true,"kategori_komponen":"","nilai_atau_nama":"","jenis_pakej":"","fungsi_dan_spesifikasi":"","senarai_pin":[{"pin":"1","nama_terminal":"","fungsi_kaki":""}],"komponen_gantian":"","tip_pemeriksaan":""}`;
 }
 
 /** Betulkan AI yang silap label IC pada PCB sebagai "bukan komponen" */
@@ -13033,8 +13014,7 @@ IMPORTANT: In "senarai_pin", list ALL pins/terminals of the component (not just 
         /bukan komponen|not electronic|bukan elektronik/i.test(String(data.kategori_komponen || '')));
       const _hasPins = data && Array.isArray(data.senarai_pin) && data.senarai_pin.length >= 2;
       const _hasDigit = /\d/.test(code);
-      const _localHit = (typeof getSmartDecode === 'function') ? getSmartDecode(code, 'AUTO') : null;
-      if (_aiNot && !_localHit && (!_hasDigit || !_hasPins)) {
+      if (_aiNot && (!_hasDigit || !_hasPins)) {
         try { stopActionTimer(true); } catch (e) {}
         ra.innerHTML = `<div class="p-4 rounded-xl bg-amber-500/10 border border-amber-400/40 text-amber-200 text-xs">🚫 "<strong>${escapeHtml(code)}</strong>" bukan kod atau nama komponen elektronik yang dikenali. Semak ejaan kod pada badan komponen, atau cuba <strong>Imbas Gambar</strong>.</div>`;
         showToast("🚫 Bukan komponen elektronik", "warn");
@@ -16686,11 +16666,27 @@ function buildFullLocalDatabaseContextForPrompt(text) {
 function mergeLocalDbWithAiResult(aiData, rawCode = "", hint = "AUTO") {
   if (!aiData || typeof aiData !== "object") return aiData;
   try {
-    const probe = String(aiData.nilai_atau_nama || rawCode || "").trim().toUpperCase().replace(/[^A-Z0-9]/g, "");
-    if (!probe) return aiData;
-    const dbHit = (typeof getSmartDecode === "function" ? getSmartDecode(probe, hint) : null)
+    const aiName = String(aiData.nilai_atau_nama || "").trim().toUpperCase().replace(/[^A-Z0-9]/g, "");
+    const qCode = String(rawCode || "").trim().toUpperCase().replace(/[^A-Z0-9]/g, "");
+    const probe = aiName || qCode;
+    if (!probe || probe.length < 2) return aiData;
+    let dbHit = (typeof getSmartDecode === "function" ? getSmartDecode(probe, hint) : null)
       || (typeof memFindByKey === "function" ? memFindByKey(probe) : null)
       || (typeof SMD_MARKING_DB !== "undefined" ? SMD_MARKING_DB[probe] : null);
+    if (!dbHit && qCode && qCode !== probe && qCode.length >= 2) {
+      dbHit = (typeof getSmartDecode === "function" ? getSmartDecode(qCode, hint) : null)
+        || (typeof memFindByKey === "function" ? memFindByKey(qCode) : null);
+    }
+    if (dbHit && dbHit.nilai_atau_nama) {
+      const hitName = String(dbHit.nilai_atau_nama).trim().toUpperCase().replace(/[^A-Z0-9]/g, "");
+      const hitKod = String(dbHit.kod_asal || dbHit.primaryKey || "").trim().toUpperCase().replace(/[^A-Z0-9]/g, "");
+      const matchesQueryOrAi =
+        (aiName && (hitName.includes(aiName) || aiName.includes(hitName) || hitKod === aiName)) ||
+        (qCode && (hitName.includes(qCode) || qCode.includes(hitName) || hitKod === qCode));
+      if (!matchesQueryOrAi) {
+        dbHit = null;
+      }
+    }
 
     if (dbHit && dbHit.nilai_atau_nama) {
       const aiPins = Array.isArray(aiData.senarai_pin) && aiData.senarai_pin.length ? aiData.senarai_pin : [];
