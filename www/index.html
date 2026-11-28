@@ -7142,32 +7142,35 @@ async function migrateLegacyLocalStorageToIndexedDb() {
   } catch (e) {}
 }
 
-function bulkUpsertEntriesToIndexedDb(entriesArray) {
-  return new Promise((resolve) => {
-    if (!entriesArray || !entriesArray.length) {
-      resolve({ added: 0, skipped: 0 });
-      return;
-    }
+async function bulkUpsertEntriesToIndexedDb(entriesArray, onProgress) {
+  if (!entriesArray || !entriesArray.length) {
+    return { added: 0, skipped: 0 };
+  }
 
-    let added = 0;
-    let skipped = 0;
+  let added = 0;
+  let skipped = 0;
+  const BATCH_SIZE = 1000;
+  const total = entriesArray.length;
+
+  for (let start = 0; start < total; start += BATCH_SIZE) {
+    const end = Math.min(start + BATCH_SIZE, total);
     const toWriteComponents = [];
     const toWriteAliases = [];
 
-    entriesArray.forEach(rawItem => {
-      if (!rawItem || !rawItem.nilai_atau_nama) { skipped++; return; }
+    for (let i = start; i < end; i++) {
+      const rawItem = entriesArray[i];
+      if (!rawItem || !rawItem.nilai_atau_nama) { skipped++; continue; }
       const nameClean = String(rawItem.nilai_atau_nama).trim();
       const catClean = String(rawItem.kategori_komponen || "Komponen Elektronik").trim();
       const catLower = catClean.toLowerCase();
       if (!nameClean || nameClean === "-" || catLower.includes("unknown") || catLower.includes("tidak dikenali") || catLower.includes("tidak dikenal")) {
         skipped++;
-        return;
+        continue;
       }
 
       const pk = normalizeComponentKey(nameClean);
       const kodAsal = String(rawItem.kod_asal || rawItem.primaryKey || nameClean).trim().toUpperCase();
       if (fastMemoryComponents[pk]) {
-        // Tambah alias baharu jika kod carian berbeza
         const newAliases = extractSearchAliases(rawItem, kodAsal);
         newAliases.forEach(ak => {
           if (!fastMemoryAliases[ak]) {
@@ -7176,7 +7179,7 @@ function bulkUpsertEntriesToIndexedDb(entriesArray) {
           }
         });
         skipped++;
-        return;
+        continue;
       }
 
       const entry = {
@@ -7198,32 +7201,37 @@ function bulkUpsertEntriesToIndexedDb(entriesArray) {
         toWriteAliases.push({ aliasKey: ak, primaryKey: pk });
       });
       added++;
-    });
-
-    if (!idbInstance) {
-      // Sandaran jika pelayar tidak menyokong IndexedDB
-      safeStorageSet(STORAGE_CUSTOM_DB_KEY, JSON.stringify(fastMemoryComponents));
-      resolve({ added, skipped });
-      return;
     }
 
-    if (!toWriteComponents.length && !toWriteAliases.length) {
-      resolve({ added, skipped });
-      return;
+    if (idbInstance && (toWriteComponents.length || toWriteAliases.length)) {
+      await new Promise((resBatch) => {
+        try {
+          const tx = idbInstance.transaction([IDB_STORE_COMPONENTS, IDB_STORE_ALIASES], "readwrite");
+          const compStore = tx.objectStore(IDB_STORE_COMPONENTS);
+          const aliasStore = tx.objectStore(IDB_STORE_ALIASES);
+          toWriteComponents.forEach(c => compStore.put(c));
+          toWriteAliases.forEach(a => aliasStore.put(a));
+          tx.oncomplete = () => resBatch();
+          tx.onerror = () => resBatch();
+        } catch (e) {
+          resBatch();
+        }
+      });
     }
 
-    try {
-      const tx = idbInstance.transaction([IDB_STORE_COMPONENTS, IDB_STORE_ALIASES], "readwrite");
-      const compStore = tx.objectStore(IDB_STORE_COMPONENTS);
-      const aliasStore = tx.objectStore(IDB_STORE_ALIASES);
-      toWriteComponents.forEach(c => compStore.put(c));
-      toWriteAliases.forEach(a => aliasStore.put(a));
-      tx.oncomplete = () => resolve({ added, skipped });
-      tx.onerror = () => resolve({ added, skipped });
-    } catch (e) {
-      resolve({ added, skipped });
+    if (typeof onProgress === "function") {
+      try { onProgress(end, total); } catch (e) {}
     }
-  });
+    if (end < total) {
+      await new Promise(r => setTimeout(r, 0));
+    }
+  }
+
+  if (!idbInstance) {
+    safeStorageSet(STORAGE_CUSTOM_DB_KEY, JSON.stringify(fastMemoryComponents));
+  }
+
+  return { added, skipped };
 }
 
 function isComponentAlreadyInDatabase(data, rawQuery = "") {
@@ -7710,16 +7718,53 @@ function exportSavedDatabaseJson(includeBuiltIn = false) {
   }
 }
 
+function expandCompactJsonV1(parsed) {
+  if (!parsed || !parsed._meta || parsed._meta.format !== "ESP_COMPACT_V1" || !parsed.d) return null;
+  const cats = parsed._c || [];
+  const pkgs = parsed._p || [];
+  const tips = parsed._t || [];
+  const pins = parsed._s || [];
+  const d = parsed.d;
+  const keys = Object.keys(d);
+  const out = new Array(keys.length);
+  for (let i = 0; i < keys.length; i++) {
+    const k = keys[i];
+    const row = d[k];
+    const rawPins = pins[row[6]] || [];
+    const pinObjs = new Array(rawPins.length);
+    for (let j = 0; j < rawPins.length; j++) {
+      const p = rawPins[j];
+      pinObjs[j] = { pin: p[0], nama_terminal: p[1], fungsi_kaki: p[2] };
+    }
+    out[i] = {
+      kod_asal: row.length > 7 ? row[7] : k,
+      kategori_komponen: cats[row[1]] || "Komponen Elektronik",
+      nilai_atau_nama: row[0] !== "" ? row[0] : k,
+      jenis_pakej: pkgs[row[2]] || "-",
+      fungsi_dan_spesifikasi: row[3] || "",
+      komponen_gantian: row[4] || "",
+      tip_pemeriksaan: tips[row[5]] || "",
+      senarai_pin: pinObjs
+    };
+  }
+  return out;
+}
+
 async function handleImportJsonDatabase(event) {
   const file = event.target && event.target.files && event.target.files[0];
   if (!file) return;
+  const idbBadge = document.getElementById('idbStatusBadge');
   try {
     showToast("⏳ Membaca & mengindeks fail JSON ke IndexedDB...", "info");
+    if (idbBadge) idbBadge.textContent = "Membaca fail...";
     const text = await file.text();
     const parsed = JSON.parse(text);
     let entries = [];
 
-    if (Array.isArray(parsed)) {
+    const compactEntries = expandCompactJsonV1(parsed);
+    if (compactEntries) {
+      entries = compactEntries;
+    } else if (Array.isArray(parsed)) {
       entries = parsed;
     } else if (parsed && typeof parsed === 'object') {
       entries = Object.keys(parsed).map(k => {
@@ -7733,15 +7778,23 @@ async function handleImportJsonDatabase(event) {
 
     if (!entries.length) {
       showToast("⚠️ Fail JSON kosong atau format tidak sah", "warn");
+      if (idbBadge) updateIdbBadgeUi(!!idbInstance);
       event.target.value = '';
       return;
     }
 
     await openFastIndexedDb();
-    const res = await bulkUpsertEntriesToIndexedDb(entries);
+    const res = await bulkUpsertEntriesToIndexedDb(entries, (done, total) => {
+      if (idbBadge) {
+        const pct = Math.round((done / total) * 100);
+        idbBadge.textContent = `Mengimport ${pct}% (${done.toLocaleString()}/${total.toLocaleString()})`;
+      }
+    });
+    updateIdbBadgeUi(!!idbInstance);
     updateSavedDbCounterUi();
     showToast(`✅ Import Selesai: ${res.added} baharu ditambah, ${res.skipped} sedia ada/diindeks`, "ok");
   } catch (err) {
+    if (idbBadge) updateIdbBadgeUi(!!idbInstance);
     showToast(`❌ Gagal membaca fail JSON: ${err.message}`, "err");
   } finally {
     event.target.value = '';
